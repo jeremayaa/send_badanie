@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}MedApp{% endblock %}</title>
+</head>
+<body>
+  {% if user.is_authenticated %}
+    <p>
+      Witaj, {{ user.username }}!
+      | <a href="{% url 'core:pacjent-list' %}">Pacjenci</a>
+      | <a href="{% url 'core:badanie-list' %}">Badania</a>
+      <!-- zamiast <a> na logout: -->
+      <form method="post" action="{% url 'logout' %}" style="display:inline">
+        {% csrf_token %}
+        <button type="submit">Wyloguj</button>
+      </form>
+    </p>
+    <hr>
+  {% endif %}
+  {% block content %}{% endblock %}
+</body>
+</html>

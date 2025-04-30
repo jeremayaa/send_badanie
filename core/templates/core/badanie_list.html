@@ -1,0 +1,12 @@
+{% extends 'core/base.html' %}
+{% block title %}Badania{% endblock %}
+{% block content %}
+  <h2>Lista badań</h2>
+  <ul>
+    {% for badanie in badania %}
+      <li>ID {{ badanie.id }} — {{ badanie.opis|default:"(brak opisu)" }}</li>
+    {% empty %}
+      <li>Brak badań.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

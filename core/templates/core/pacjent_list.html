@@ -1,0 +1,12 @@
+{% extends 'core/base.html' %}
+{% block title %}Pacjenci{% endblock %}
+{% block content %}
+  <h2>Lista pacjentów</h2>
+  <ul>
+    {% for pacjent in pacjenci %}
+      <li>{{ pacjent.imie }} {{ pacjent.nazwisko }}</li>
+    {% empty %}
+      <li>Brak pacjentów.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
