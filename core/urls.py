@@ -13,5 +13,10 @@ from . import views
 app_name = 'core'
 urlpatterns = [
     path('pacjenci/', views.PacjentListView.as_view(), name='pacjent-list'),
+    path('pacjenci/dodaj/',  views.PacjentCreateView.as_view(), name='pacjent-add'),
+
     path('badania/',   views.BadanieListView.as_view(),   name='badanie-list'),
+    path('badania/dodaj/',   views.BadanieCreateView.as_view(), name='badanie-add'),
+    path('badania/<int:pk>/',views.BadanieDetailView.as_view(), name='badanie-detail'),
+    
 ]

@@ -1,10 +1,15 @@
 {% extends 'core/base.html' %}
 {% block title %}Badania{% endblock %}
 {% block content %}
-  <h2>Lista badań</h2>
+  <h2>Badania</h2>
+  <p><a href="{% url 'core:badanie-add' %}">+ Nowe badanie</a></p>
   <ul>
     {% for badanie in badania %}
-      <li>ID {{ badanie.id }} — {{ badanie.opis|default:"(brak opisu)" }}</li>
+      <li>
+        <a href="{% url 'core:badanie-detail' badanie.pk %}">
+          Badanie #{{ badanie.id }} – {{ badanie.opis|default:"(brak opisu)" }}
+        </a>
+      </li>
     {% empty %}
       <li>Brak badań.</li>
     {% endfor %}

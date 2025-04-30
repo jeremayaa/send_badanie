@@ -1,0 +1,21 @@
+{% extends 'core/base.html' %}
+{% block title %}Szczegóły badania{% endblock %}
+{% block content %}
+  <h2>Badanie #{{ badanie.id }}</h2>
+  <div>
+    <img src="{{ badanie.zdjecie.url }}" alt="Zdjęcie badania" style="max-width:300px;">
+  </div>
+  <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
+
+  <h3>Analizy</h3>
+  <ul>
+    {% for analiza in badanie.analizy.all %}
+      <li>
+        <img src="{{ analiza.zdjecie.url }}" alt="{{ analiza.nazwa }}" style="max-width:100px;">
+        {{ analiza.nazwa }}
+      </li>
+    {% empty %}
+      <li>Brak analiz.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}
