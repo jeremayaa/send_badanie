@@ -32,7 +32,8 @@ class Tag(models.Model):
 
 class Badanie(models.Model):
     pacjent = models.ForeignKey(Pacjent, on_delete=models.CASCADE, related_name='badania')
-    tagi = models.ManyToManyField(Tag, related_name='badania', blank=True)
+    nazwa = models.CharField(max_length=100)
+    # tagi = models.ManyToManyField(Tag, related_name='badania', blank=True)
     zdjecie = models.ImageField(upload_to='badania/')
     opis = models.TextField(blank=True)
     data = models.DateTimeField(auto_now_add=True)

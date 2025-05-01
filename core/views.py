@@ -1,9 +1,10 @@
 from django.shortcuts import render
 
 from django.contrib.auth.mixins import LoginRequiredMixin
-from django.views.generic import ListView, CreateView, DetailView
-from .models import Pacjent, Badanie
-from .forms import PacjentForm, BadanieForm
+from django.views import View
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, View
+from .models import Pacjent, Badanie, Analiza
+from .forms import PacjentForm, BadanieForm, AnalizaForm
 
 
 
@@ -11,6 +12,15 @@ class PacjentListView(LoginRequiredMixin, ListView):
     model = Pacjent
     template_name = 'core/pacjent_list.html'
     context_object_name = 'pacjenci'
+
+    def get_queryset(self):
+        scope = self.request.GET.get('scope', 'all')
+        if scope == 'mine':
+            # tylko pacjenci zalogowanego lekarza
+            return Pacjent.objects.filter(lekarz=self.request.user.lekarz)
+        else:
+            # wszyscy pacjenci
+            return Pacjent.objects.all()
 
 
 from django.urls import reverse_lazy
@@ -24,6 +34,46 @@ class PacjentCreateView(LoginRequiredMixin, CreateView):
     def form_valid(self, form):
         form.instance.lekarz = self.request.user.lekarz
         return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse('core:pacjent-detail', kwargs={'pk': self.object.pk})
+    
+class PacjentDetailView(LoginRequiredMixin, DetailView):
+    model = Pacjent
+    template_name = 'core/pacjent_detail.html'
+    context_object_name = 'pacjent'
+
+    # def get_queryset(self):
+    #     return Pacjent.objects.filter(lekarz=self.request.user.lekarz)
+    
+
+from django.http import HttpResponse
+from django.urls import reverse
+from django.shortcuts import get_object_or_404
+
+class PacjentUpdateView(LoginRequiredMixin, UpdateView):
+    model = Pacjent
+    form_class = PacjentForm
+    template_name = 'core/pacjent_form.html'
+
+    def get_queryset(self):
+        return Pacjent.objects.filter(lekarz=self.request.user.lekarz)
+
+    def get_success_url(self):
+        return reverse('core:pacjent-detail', kwargs={'pk': self.object.pk})
+
+class PacjentDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        pacjent = get_object_or_404(Pacjent, pk=pk, lekarz=request.user.lekarz)
+        pacjent.delete()
+        # alert i redirect do listy
+        url = reverse('core:pacjent-list')
+        return HttpResponse(f"""
+          <script>
+            alert('Pacjent został usunięty');
+            window.location.href = '{url}';
+          </script>
+        """)
 
 class BadanieListView(LoginRequiredMixin, ListView):
     model = Badanie
@@ -37,6 +87,10 @@ class BadanieCreateView(LoginRequiredMixin, CreateView):
     template_name = 'core/badanie_form.html'
     success_url = reverse_lazy('core:badanie-list')
 
+    # po utworzeniu idziemy na detail
+    def get_success_url(self):
+        return reverse('core:badanie-detail', kwargs={'pk': self.object.pk})
+
     def get_initial(self):
         initial = super().get_initial()
         pacjent_id = self.request.GET.get('pacjent')
@@ -48,3 +102,78 @@ class BadanieDetailView(LoginRequiredMixin, DetailView):
     model = Badanie
     template_name = 'core/badanie_detail.html'
     context_object_name = 'badanie'
+
+class BadanieUpdateView(LoginRequiredMixin, UpdateView):
+    model = Badanie
+    form_class = BadanieForm
+
+    template_name = 'core/badanie_form.html'
+    def get_queryset(self):
+        # tylko badania pacjentów Twojego lekarza
+        return Badanie.objects.filter(pacjent__lekarz=self.request.user.lekarz)
+
+    def get_success_url(self):
+        return reverse('core:badanie-detail', kwargs={'pk': self.object.pk})
+class BadanieDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        badanie = get_object_or_404(
+            Badanie, pk=pk, pacjent__lekarz=request.user.lekarz
+        )
+        badanie.delete()
+        url = reverse('core:badanie-list')
+        return HttpResponse(f"""
+          <script>
+            alert('Badanie zostało usunięte');
+            window.location.href = '{url}';
+          </script>
+        """)
+    
+
+class AnalizaCreateView(LoginRequiredMixin, CreateView):
+    model = Analiza
+    form_class = AnalizaForm
+    template_name = 'core/analiza_form.html'
+
+    def form_valid(self, form):
+        badanie = get_object_or_404(
+            Badanie, pk=self.kwargs['badanie_pk']
+        )
+        form.instance.badanie = badanie
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:analiza-detail', kwargs={'pk': self.object.pk})
+
+class AnalizaDetailView(LoginRequiredMixin, DetailView):
+    model = Analiza
+    template_name = 'core/analiza_detail.html'
+    context_object_name = 'analiza'
+
+class AnalizaUpdateView(LoginRequiredMixin, UpdateView):
+    model = Analiza
+    form_class = AnalizaForm
+    template_name = 'core/analiza_form.html'
+
+    def get_queryset(self):
+        # tylko analizy badań Twojego lekarza
+        return Analiza.objects.filter(
+            badanie__pacjent__lekarz=self.request.user.lekarz
+        )
+
+    def get_success_url(self):
+        return reverse('core:analiza-detail', kwargs={'pk': self.object.pk})
+
+class AnalizaDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        analiza = get_object_or_404(
+            Analiza, pk=pk,
+            badanie__pacjent__lekarz=request.user.lekarz
+        )
+        analiza.delete()
+        url = reverse('core:badanie-detail', kwargs={'pk': analiza.badanie.pk})
+        return HttpResponse(f"""
+          <script>
+            alert('Analiza została usunięta');
+            window.location.href = '{url}';
+          </script>
+        """)

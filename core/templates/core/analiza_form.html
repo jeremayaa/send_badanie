@@ -1,0 +1,14 @@
+{% extends 'core/base.html' %}
+{% block title %}
+  {% if form.instance.pk %}Edytuj analizę{% else %}Dodaj analizę{% endif %}
+{% endblock %}
+{% block content %}
+  <h2>
+    {% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} analizę
+  </h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Zapisz</button>
+  </form>
+{% endblock %}

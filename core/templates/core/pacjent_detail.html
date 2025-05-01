@@ -1,0 +1,36 @@
+{% extends 'core/base.html' %}
+{% block title %}Pacjent – {{ pacjent.imie }} {{ pacjent.nazwisko }}{% endblock %}
+{% block content %}
+  <h2>Pacjent: {{ pacjent.imie }} {{ pacjent.nazwisko }}</h2>
+  <p>PESEL: {{ pacjent.pesel }}</p>
+  <p>Data urodzenia: {{ pacjent.data_urodzenia }}</p>
+  <p>Opis: {{ pacjent.opis|default:"(brak)" }}</p>
+
+  {% if pacjent.lekarz.user == user %}
+    <p>
+      <a href="{% url 'core:pacjent-edit' pacjent.pk %}">Edytuj</a>
+      <form method="post"
+            action="{% url 'core:pacjent-delete' pacjent.pk %}"
+            style="display:inline"
+            onsubmit="return confirm('Czy na pewno chcesz usunąć pacjenta?');">
+        {% csrf_token %}
+        <button type="submit">Usuń</button>
+      </form>
+    </p>
+  {% endif %}
+
+  <h3>Badania pacjenta</h3>
+  <p><a href="{% url 'core:badanie-add' %}?pacjent={{ pacjent.pk }}">+ Dodaj badanie</a></p>
+  <ul>
+    {% for badanie in pacjent.badania.all %}
+      <li style="margin-bottom: 0.5em;">
+        <a href="{% url 'core:badanie-detail' badanie.pk %}">
+          <img src="{{ badanie.zdjecie.url }}" alt="Badanie #{{ badanie.id }}" style="max-width:80px; vertical-align:middle;">
+          Badanie #{{ badanie.id }} – {{ badanie.opis|default:"(brak opisu)" }}
+        </a>
+      </li>
+    {% empty %}
+      <li>Brak badań dla tego pacjenta.</li>
+    {% endfor %}
+  </ul>
+{% endblock %}

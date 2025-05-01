@@ -1,18 +1,40 @@
 {% extends 'core/base.html' %}
-{% block title %}Szczegóły badania{% endblock %}
+{% block title %}{{ badanie.nazwa }}{% endblock %}
 {% block content %}
-  <h2>Badanie #{{ badanie.id }}</h2>
+  <h2>{{ badanie.nazwa }}</h2>
   <div>
-    <img src="{{ badanie.zdjecie.url }}" alt="Zdjęcie badania" style="max-width:300px;">
+    <img src="{{ badanie.zdjecie.url }}" alt="{{ badanie.nazwa }}" style="max-width:300px;">
   </div>
   <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
 
+  {% if badanie.pacjent.lekarz.user == user %}
+    <p>
+      <a href="{% url 'core:badanie-edit' badanie.pk %}">Edytuj</a>
+      <form method="post"
+            action="{% url 'core:badanie-delete' badanie.pk %}"
+            style="display:inline"
+            onsubmit="return confirm('Czy na pewno chcesz usunąć badanie?');">
+        {% csrf_token %}
+        <button type="submit">Usuń</button>
+      </form>
+    </p>
+  {% endif %}
+
   <h3>Analizy</h3>
+  <p>
+    <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">
+      + Dodaj analizę
+    </a>
+  </p>
   <ul>
     {% for analiza in badanie.analizy.all %}
-      <li>
-        <img src="{{ analiza.zdjecie.url }}" alt="{{ analiza.nazwa }}" style="max-width:100px;">
-        {{ analiza.nazwa }}
+      <li style="margin-bottom:0.5em;">
+        <a href="{% url 'core:analiza-detail' analiza.pk %}">
+          <img src="{{ analiza.zdjecie.url }}"
+               alt="{{ analiza.nazwa }}"
+               style="max-width:80px; vertical-align:middle;">
+          {{ analiza.nazwa }}
+        </a>
       </li>
     {% empty %}
       <li>Brak analiz.</li>

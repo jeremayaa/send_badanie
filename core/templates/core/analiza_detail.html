@@ -1,0 +1,33 @@
+{% extends 'core/base.html' %}
+{% block title %}{{ analiza.nazwa }}{% endblock %}
+{% block content %}
+  <h2>{{ analiza.nazwa }}</h2>
+  <div>
+    <img src="{{ analiza.zdjecie.url }}"
+         alt="{{ analiza.nazwa }}"
+         style="max-width:300px;">
+  </div>
+  <p>{{ analiza.opis|default:"(brak opisu)" }}</p>
+  <p>
+    <strong>Badanie:</strong>
+    <a href="{% url 'core:badanie-detail' analiza.badanie.pk %}">
+      <img src="{{ analiza.badanie.zdjecie.url }}"
+           alt="Badanie #{{ analiza.badanie.pk }}"
+           style="max-width:80px; vertical-align:middle;">
+      {{ analiza.badanie.nazwa }}
+    </a>
+  </p>
+
+  {% if analiza.badanie.pacjent.lekarz.user == user %}
+    <p>
+      <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
+      <form method="post"
+            action="{% url 'core:analiza-delete' analiza.pk %}"
+            style="display:inline"
+            onsubmit="return confirm('Czy na pewno chcesz usunąć analizę?');">
+        {% csrf_token %}
+        <button type="submit">Usuń</button>
+      </form>
+    </p>
+  {% endif %}
+{% endblock %}

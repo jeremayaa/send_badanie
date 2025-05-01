@@ -7,7 +7,7 @@
     {% for badanie in badania %}
       <li>
         <a href="{% url 'core:badanie-detail' badanie.pk %}">
-          Badanie #{{ badanie.id }} – {{ badanie.opis|default:"(brak opisu)" }}
+          {{ badanie.nazwa }} – {{ badanie.opis|default:"(brak opisu)" }}
         </a>
       </li>
     {% empty %}

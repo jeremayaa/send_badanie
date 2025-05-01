@@ -2,11 +2,17 @@
 {% block title %}Pacjenci{% endblock %}
 {% block content %}
   <h2>Pacjenci</h2>
+  <p>
+    <a href="{% url 'core:pacjent-list' %}?scope=mine">Twoi pacjenci</a> |
+    <a href="{% url 'core:pacjent-list' %}?scope=all">Wszyscy pacjenci</a>
+  </p>
   <p><a href="{% url 'core:pacjent-add' %}">+ Dodaj pacjenta</a></p>
   <ul>
     {% for pacjent in pacjenci %}
       <li>
-        {{ pacjent.imie }} {{ pacjent.nazwisko }}
+        <a href="{% url 'core:pacjent-detail' pacjent.pk %}">
+          {{ pacjent.imie }} {{ pacjent.nazwisko }}
+        </a>
         <!-- nowy przycisk obok -->
         <a href="{% url 'core:badanie-add' %}?pacjent={{ pacjent.pk }}">[+ Dodaj badanie]</a>
       </li>
