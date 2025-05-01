@@ -26,11 +26,21 @@ urlpatterns = [
     path('badania/<int:pk>/edit/',   views.BadanieUpdateView.as_view(), name='badanie-edit'),
     path('badania/<int:pk>/delete/', views.BadanieDeleteView.as_view(), name='badanie-delete'),
 
+    path('badania/<int:pk>/analyze/', views.BadanieAnalyzeView.as_view(), name='badanie-analyze'),
+
     path(
       'badania/<int:badanie_pk>/analizy/dodaj/',
       views.AnalizaCreateView.as_view(),
       name='analiza-add'
     ),
+    # programowe dodawanie analizy
+    path(
+      'badania/<int:badanie_pk>/analizy/program/',
+      views.AnalizaProgramCreateView.as_view(),
+      name='analiza-add-program'
+    ),
+
+    # detail / edit / delete analizy…
     path(
       'analizy/<int:pk>/',
       views.AnalizaDetailView.as_view(),

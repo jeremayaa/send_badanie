@@ -8,7 +8,44 @@
   </h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Zapisz</button>
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}
+    {{ form.opis.label_tag }}  {{ form.opis }}
+    {{ form.zdjecie }}  {# To ukryte pole file #}
+
+    <p>
+      <!-- <button type="button" id="change-filename-btn">Zmień nazwę pliku</button> -->
+      <button type="submit">Zapisz</button>
+    </p>
   </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dataURL = localStorage.getItem('bwImage');
+      if (!dataURL) return;
+
+      fetch(dataURL)
+        .then(res => res.blob())
+        .then(blob => {
+          let filename = 'analiza.png';
+          const file = new File([blob], filename, { type: blob.type });
+          const input = document.querySelector('input[type="file"]');
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          input.files = dt.files;
+
+          document.getElementById('change-filename-btn').onclick = () => {
+            const newName = prompt('Podaj nową nazwę pliku (z rozszerzeniem):', filename);
+            if (!newName) return;
+            filename = newName;
+            const newFile = new File([blob], filename, { type: blob.type });
+            const dt2 = new DataTransfer();
+            dt2.items.add(newFile);
+            input.files = dt2.files;
+            alert('Nazwa pliku ustawiona na: ' + filename);
+          };
+
+          localStorage.removeItem('bwImage');
+        });
+    });
+  </script>
 {% endblock %}

@@ -25,6 +25,11 @@
     <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">
       + Dodaj analizę
     </a>
+    <p>
+      <a href="{% url 'core:badanie-analyze' badanie.pk %}">
+        Rozpocznij analizę w programie
+      </a>
+    </p>
   </p>
   <ul>
     {% for analiza in badanie.analizy.all %}

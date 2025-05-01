@@ -13,8 +13,16 @@ class BadanieForm(forms.ModelForm):
         fields = ['pacjent', 'nazwa', 'zdjecie', 'opis']
 
 
-class AnalizaForm(forms.ModelForm):
+class AnalizaStandardForm(forms.ModelForm):
     class Meta:
         model = Analiza
-        # badanie przypisujemy w form_valid, więc go nie pokazujemy
         fields = ['nazwa', 'zdjecie', 'opis']
+
+class AnalizaProgramForm(forms.ModelForm):
+    class Meta:
+        model = Analiza
+        fields = ['nazwa', 'zdjecie', 'opis']
+        widgets = {
+            # ukrywamy pole pliku, bo będziemy je wypełniać z JS
+            'zdjecie': forms.ClearableFileInput(attrs={'style': 'display:none;'}),
+        }

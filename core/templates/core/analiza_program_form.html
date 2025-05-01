@@ -1,0 +1,44 @@
+{% extends 'core/base.html' %}
+{% block title %}Dodaj analizę (programowo){% endblock %}
+{% block content %}
+  <h2>Dodaj analizę (programowo)</h2>
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}<br>
+    {{ form.opis.label_tag }}  {{ form.opis }}<br>
+    {{ form.zdjecie }} {# pole pliku ukryte #}
+
+    <p>
+      <button type="button" id="change-filename-btn">Zmień nazwę pliku</button>
+      <button type="submit">Zapisz</button>
+    </p>
+  </form>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const dataURL = localStorage.getItem('bwImage');
+      if (!dataURL) return;
+      fetch(dataURL)
+        .then(res => res.blob())
+        .then(blob => {
+          let filename = 'analiza.png';
+          const input = document.querySelector('input[type="file"]');
+          function attach(fileName) {
+            const file = new File([blob], fileName, { type: blob.type });
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            input.files = dt.files;
+          }
+          attach(filename);
+          document.getElementById('change-filename-btn').onclick = () => {
+            const newName = prompt('Nowa nazwa pliku:', filename);
+            if (!newName) return;
+            filename = newName;
+            attach(filename);
+            alert('Nazwa pliku: ' + filename);
+          };
+          localStorage.removeItem('bwImage');
+        });
+    });
+  </script>
+{% endblock %}

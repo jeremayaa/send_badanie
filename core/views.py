@@ -4,7 +4,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, View
 from .models import Pacjent, Badanie, Analiza
-from .forms import PacjentForm, BadanieForm, AnalizaForm
+from .forms import PacjentForm, BadanieForm, AnalizaStandardForm, AnalizaProgramForm
 
 
 
@@ -130,14 +130,27 @@ class BadanieDeleteView(LoginRequiredMixin, View):
     
 
 class AnalizaCreateView(LoginRequiredMixin, CreateView):
+    """Standardowy formularz: nazwa, plik do wrzucenia, opis."""
     model = Analiza
-    form_class = AnalizaForm
+    form_class = AnalizaStandardForm
     template_name = 'core/analiza_form.html'
 
     def form_valid(self, form):
-        badanie = get_object_or_404(
-            Badanie, pk=self.kwargs['badanie_pk']
-        )
+        badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
+        form.instance.badanie = badanie
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse('core:analiza-detail', kwargs={'pk': self.object.pk})
+    
+class AnalizaProgramCreateView(LoginRequiredMixin, CreateView):
+    """Formularz programowy: auto-załadowany plik + zmiana nazwy."""
+    model = Analiza
+    form_class = AnalizaProgramForm
+    template_name = 'core/analiza_program_form.html'
+
+    def form_valid(self, form):
+        badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
         form.instance.badanie = badanie
         return super().form_valid(form)
 
@@ -151,7 +164,7 @@ class AnalizaDetailView(LoginRequiredMixin, DetailView):
 
 class AnalizaUpdateView(LoginRequiredMixin, UpdateView):
     model = Analiza
-    form_class = AnalizaForm
+    form_class = AnalizaStandardForm
     template_name = 'core/analiza_form.html'
 
     def get_queryset(self):
@@ -177,3 +190,10 @@ class AnalizaDeleteView(LoginRequiredMixin, View):
             window.location.href = '{url}';
           </script>
         """)
+    
+class BadanieAnalyzeView(LoginRequiredMixin, DetailView):
+    model = Badanie
+    template_name = 'core/badanie_analyze.html'
+    context_object_name = 'badanie'
+
+    # (nie potrzebujemy get_queryset, bo każdy lekarz może analizować każdy obraz)
