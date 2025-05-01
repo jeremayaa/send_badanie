@@ -29,5 +29,16 @@
         <button type="submit">Usuń</button>
       </form>
     </p>
+
+    {% if analiza.badanie.pacjent.lekarz.user == user %}
+      <p>
+        <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
+        |
+        <a href="{% url 'core:program-analyze-analiza' analiza_pk=analiza.pk %}">
+          Edytuj w programie
+        </a>
+        <!-- <form ...>Usuń…</form> -->
+      </p>
+    {% endif %}
   {% endif %}
 {% endblock %}

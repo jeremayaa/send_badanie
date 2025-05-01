@@ -2,7 +2,7 @@ from django.shortcuts import render
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, View
+from django.views.generic import ListView, CreateView, DetailView, UpdateView, View, TemplateView
 from .models import Pacjent, Badanie, Analiza
 from .forms import PacjentForm, BadanieForm, AnalizaStandardForm, AnalizaProgramForm
 
@@ -190,10 +190,35 @@ class AnalizaDeleteView(LoginRequiredMixin, View):
             window.location.href = '{url}';
           </script>
         """)
-    
-class BadanieAnalyzeView(LoginRequiredMixin, DetailView):
-    model = Badanie
-    template_name = 'core/badanie_analyze.html'
-    context_object_name = 'badanie'
 
-    # (nie potrzebujemy get_queryset, bo każdy lekarz może analizować każdy obraz)
+class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
+    template_name = 'core/program_analyze.html'
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        if 'analiza_pk' in self.kwargs:
+            analiza = get_object_or_404(Analiza, pk=self.kwargs['analiza_pk'])
+            ctx['title']        = analiza.nazwa
+            ctx['image_url']    = analiza.zdjecie.url
+            ctx['redirect_url'] = reverse('core:analiza-edit-program', kwargs={'pk': analiza.pk})
+        else:
+            badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
+            ctx['title']        = badanie.nazwa
+            ctx['image_url']    = badanie.zdjecie.url
+            ctx['redirect_url'] = reverse('core:analiza-add-program', kwargs={'badanie_pk': badanie.pk})
+        return ctx
+
+class AnalizaProgramUpdateView(LoginRequiredMixin, UpdateView):
+    """Formularz edycji analizy: auto-załadowany plik + zmiana nazwy."""
+    model = Analiza
+    form_class = AnalizaProgramForm
+    template_name = 'core/analiza_program_form.html'
+
+    def get_queryset(self):
+        # tylko analizy Twoich pacjentów
+        return Analiza.objects.filter(
+            badanie__pacjent__lekarz=self.request.user.lekarz
+        )
+
+    def get_success_url(self):
+        return reverse('core:analiza-detail', kwargs={'pk': self.object.pk})

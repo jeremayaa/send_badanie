@@ -1,0 +1,37 @@
+{% extends 'core/base.html' %}
+{% block title %}Analiza w programie – {{ analiza.nazwa }}{% endblock %}
+{% block content %}
+  <h2>Analiza w programie: {{ analiza.nazwa }}</h2>
+
+  <img id="orig-img" src="{{ analiza.zdjecie.url }}" style="display:none">
+  <canvas id="canvas"></canvas>
+
+  <p>
+    <button id="bw-btn">Czarnobiałe</button>
+    <button id="save-btn">Zapisz analizę</button>
+  </p>
+
+  <script>
+    const img = document.getElementById('orig-img');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+
+    img.onload = () => {
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      ctx.drawImage(img, 0, 0);
+    };
+
+    document.getElementById('bw-btn').onclick = () => {
+      ctx.filter = 'grayscale(100%)';
+      ctx.drawImage(img, 0, 0);
+    };
+
+    document.getElementById('save-btn').onclick = () => {
+      const dataURL = canvas.toDataURL('image/png');
+      localStorage.setItem('bwImage', dataURL);
+      // przejdź do edycji programowej w tym samym oknie
+      window.location.href = "{% url 'core:analiza-edit-program' analiza.pk %}";
+    };
+  </script>
+{% endblock %}

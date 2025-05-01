@@ -26,7 +26,7 @@ urlpatterns = [
     path('badania/<int:pk>/edit/',   views.BadanieUpdateView.as_view(), name='badanie-edit'),
     path('badania/<int:pk>/delete/', views.BadanieDeleteView.as_view(), name='badanie-delete'),
 
-    path('badania/<int:pk>/analyze/', views.BadanieAnalyzeView.as_view(), name='badanie-analyze'),
+    # path('badania/<int:pk>/analyze/', views.BadanieAnalyzeView.as_view(), name='badanie-analyze'),
 
     path(
       'badania/<int:badanie_pk>/analizy/dodaj/',
@@ -55,6 +55,30 @@ urlpatterns = [
       'analizy/<int:pk>/delete/',
       views.AnalizaDeleteView.as_view(),
       name='analiza-delete'
+    ),
+
+    # path(
+    #   'analizy/<int:pk>/analyze/',
+    #   views.AnalizaAnalyzeView.as_view(),
+    #   name='analiza-analyze'
+    # ),
+    path(
+      'analizy/<int:pk>/program/',
+      views.AnalizaProgramUpdateView.as_view(),
+      name='analiza-edit-program'
+    ),
+
+        # „program” dla badania
+    path(
+      'program/badanie/<int:badanie_pk>/',
+      views.ProgramAnalyzeView.as_view(),
+      name='program-analyze-badanie'
+    ),
+    # „program” dla istniejącej analizy
+    path(
+      'program/analiza/<int:analiza_pk>/',
+      views.ProgramAnalyzeView.as_view(),
+      name='program-analyze-analiza'
     ),
     
 ]
