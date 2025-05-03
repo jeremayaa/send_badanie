@@ -5,7 +5,7 @@ from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, View, TemplateView
 from .models import Pacjent, Badanie, Analiza, Tag
 from .forms import PacjentForm, BadanieForm, AnalizaStandardForm, AnalizaProgramForm
-
+from django.shortcuts import get_object_or_404
 
 
 class PacjentListView(LoginRequiredMixin, ListView):
@@ -206,6 +206,23 @@ class AnalizaDeleteView(LoginRequiredMixin, View):
           </script>
         """)
 
+# class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
+#     template_name = 'core/program_analyze.html'
+
+#     def get_context_data(self, **kwargs):
+#         ctx = super().get_context_data(**kwargs)
+#         if 'analiza_pk' in self.kwargs:
+#             analiza = get_object_or_404(Analiza, pk=self.kwargs['analiza_pk'])
+#             ctx['title']        = analiza.nazwa
+#             ctx['image_url']    = analiza.zdjecie.url
+#             ctx['redirect_url'] = reverse('core:analiza-edit-program', kwargs={'pk': analiza.pk})
+#         else:
+#             badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
+#             ctx['title']        = badanie.nazwa
+#             ctx['image_url']    = badanie.zdjecie.url
+#             ctx['redirect_url'] = reverse('core:analiza-add-program', kwargs={'badanie_pk': badanie.pk})
+#         return ctx
+
 class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
     template_name = 'core/program_analyze.html'
 
@@ -213,14 +230,24 @@ class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
         ctx = super().get_context_data(**kwargs)
         if 'analiza_pk' in self.kwargs:
             analiza = get_object_or_404(Analiza, pk=self.kwargs['analiza_pk'])
-            ctx['title']        = analiza.nazwa
-            ctx['image_url']    = analiza.zdjecie.url
-            ctx['redirect_url'] = reverse('core:analiza-edit-program', kwargs={'pk': analiza.pk})
+            badanie = analiza.badanie
+            ctx['base_image_url']    = badanie.zdjecie.url
+            ctx['overlay_image_url'] = analiza.zdjecie.url
+            ctx['redirect_url']      = reverse(
+                'core:analiza-edit-program',
+                kwargs={'pk': analiza.pk}
+            )
+            ctx['mode'] = 'edit'
         else:
             badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
-            ctx['title']        = badanie.nazwa
-            ctx['image_url']    = badanie.zdjecie.url
-            ctx['redirect_url'] = reverse('core:analiza-add-program', kwargs={'badanie_pk': badanie.pk})
+            ctx['base_image_url'] = badanie.zdjecie.url
+            ctx['overlay_image_url'] = None
+            ctx['redirect_url']      = reverse(
+                'core:analiza-add-program',
+                kwargs={'badanie_pk': badanie.pk}
+            )
+            ctx['mode'] = 'new'
+        ctx['title'] = badanie.nazwa
         return ctx
 
 class AnalizaProgramUpdateView(LoginRequiredMixin, UpdateView):
