@@ -8,8 +8,8 @@
   </h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.nazwa.label_tag }} {{ form.nazwa }}
-    {{ form.opis.label_tag }}  {{ form.opis }}
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}<br>
+    {{ form.opis.label_tag }}  {{ form.opis }}<br>
     {{ form.zdjecie }}  {# To ukryte pole file #}
 
     <p>
@@ -32,19 +32,6 @@
           const dt = new DataTransfer();
           dt.items.add(file);
           input.files = dt.files;
-
-          document.getElementById('change-filename-btn').onclick = () => {
-            const newName = prompt('Podaj nową nazwę pliku (z rozszerzeniem):', filename);
-            if (!newName) return;
-            filename = newName;
-            const newFile = new File([blob], filename, { type: blob.type });
-            const dt2 = new DataTransfer();
-            dt2.items.add(newFile);
-            input.files = dt2.files;
-            alert('Nazwa pliku ustawiona na: ' + filename);
-          };
-
-          localStorage.removeItem('bwImage');
         });
     });
   </script>

@@ -3,6 +3,11 @@
 <head>
   <meta charset="utf-8">
   <title>{% block title %}MedApp{% endblock %}</title>
+  <style>
+    body {
+      background-color: aqua;
+    }
+  </style>
 </head>
 <body>
   {% if user.is_authenticated %}

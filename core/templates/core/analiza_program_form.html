@@ -9,7 +9,7 @@
     {{ form.zdjecie }} {# pole pliku ukryte #}
 
     <p>
-      <button type="button" id="change-filename-btn">Zmień nazwę pliku</button>
+      <!-- <button type="button" id="change-filename-btn">Zmień nazwę pliku</button> -->
       <button type="submit">Zapisz</button>
     </p>
   </form>
@@ -30,13 +30,7 @@
             input.files = dt.files;
           }
           attach(filename);
-          document.getElementById('change-filename-btn').onclick = () => {
-            const newName = prompt('Nowa nazwa pliku:', filename);
-            if (!newName) return;
-            filename = newName;
-            attach(filename);
-            alert('Nazwa pliku: ' + filename);
-          };
+
           localStorage.removeItem('bwImage');
         });
     });
