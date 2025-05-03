@@ -3,7 +3,7 @@ from django.shortcuts import render
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.views.generic import ListView, CreateView, DetailView, UpdateView, View, TemplateView
-from .models import Pacjent, Badanie, Analiza
+from .models import Pacjent, Badanie, Analiza, Tag
 from .forms import PacjentForm, BadanieForm, AnalizaStandardForm, AnalizaProgramForm
 
 
@@ -80,6 +80,19 @@ class BadanieListView(LoginRequiredMixin, ListView):
     template_name = 'core/badanie_list.html'
     context_object_name = 'badania'
 
+    def get_queryset(self):
+        qs = super().get_queryset()
+        tags = self.request.GET.getlist('tags')
+        if tags:
+            qs = qs.filter(tagi__in=tags).distinct()
+        return qs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx['all_tags'] = Tag.objects.all()
+        ctx['selected_tags'] = list(map(int, self.request.GET.getlist('tags')))
+        return ctx
+
 
 class BadanieCreateView(LoginRequiredMixin, CreateView):
     model = Badanie
@@ -114,6 +127,8 @@ class BadanieUpdateView(LoginRequiredMixin, UpdateView):
 
     def get_success_url(self):
         return reverse('core:badanie-detail', kwargs={'pk': self.object.pk})
+    
+
 class BadanieDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk):
         badanie = get_object_or_404(

@@ -7,6 +7,15 @@
   </div>
   <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
 
+  <h3>Tagi badania</h3>
+  <ul>
+    {% for tag in badanie.tagi.all %}
+      <li>{{ tag.nazwa }}</li>
+    {% empty %}
+      <li>Brak tagów.</li>
+    {% endfor %}
+  </ul>
+
   {% if badanie.pacjent.lekarz.user == user %}
     <p>
       <a href="{% url 'core:badanie-edit' badanie.pk %}">Edytuj</a>

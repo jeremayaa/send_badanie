@@ -1,10 +1,30 @@
 {% extends 'core/base.html' %}
-{% block title %}Dodaj badanie{% endblock %}
+{% block title %}
+  {% if form.instance.pk %}Edytuj badanie{% else %}Dodaj badanie{% endif %}
+{% endblock %}
 {% block content %}
-  <h2>Dodaj badanie</h2>
+  <h2>{% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} badanie</h2>
   <form method="post" enctype="multipart/form-data">
     {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Zapisz</button>
+    {{ form.pacjent.label_tag }} {{ form.pacjent }}<br>
+    {{ form.nazwa.label_tag }}    {{ form.nazwa }}<br>
+    {{ form.zdjecie.label_tag }}  {{ form.zdjecie }}<br>
+    {{ form.opis.label_tag }}     {{ form.opis }}<br>
+
+    <p>
+      <button type="button" id="toggle-tags-btn">Dodaj tagi</button>
+    </p>
+    <div id="tags-container" style="display:none; margin-left:1em;">
+      {{ form.tagi }}
+    </div>
+
+    <p><button type="submit">Zapisz</button></p>
   </form>
+
+  <script>
+    document.getElementById('toggle-tags-btn').onclick = () => {
+      const c = document.getElementById('tags-container');
+      c.style.display = c.style.display === 'none' ? 'block' : 'none';
+    };
+  </script>
 {% endblock %}

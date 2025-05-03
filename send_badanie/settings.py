@@ -64,10 +64,12 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                
             ],
         },
 
         'DIRS': [os.path.join(BASE_DIR, 'core', 'templates')],
+        # 'builtins': ['django.template.defaultfilters'],
     },
 ]
 
