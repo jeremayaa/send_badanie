@@ -7,6 +7,11 @@
          alt="{{ analiza.nazwa }}"
          style="max-width:300px;">
   </div>
+  <p>
+    <a href="{{ analiza.zdjecie.url }}" download>
+      Pobierz zdjęcie
+    </a>
+  </p>
   <p>{{ analiza.opis|default:"(brak opisu)" }}</p>
   <p>
     <strong>Badanie:</strong>
