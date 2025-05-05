@@ -3,20 +3,27 @@
 {% block content %}
   <h2 style="text-align:center;">Programowa analiza: {{ title }}</h2>
 
-  <div id="canvas-container"
-       style="position:relative; margin:0 auto; background:#eee;">
-    <canvas id="baseCanvas" style="width:100%; height:100%; display:block;"></canvas>
-    <canvas id="overlayCanvas"
-            style="position:absolute; top:0; left:0;
-                   width:100%; height:100%; pointer-events:auto;">
-    </canvas>
+  <div id="canvas-container" style="position:relative; margin:0 auto; background:#eee;">
+    <canvas id="baseCanvas"></canvas>
+    <canvas id="overlayCanvas" style="position:absolute; top:0; left:0; pointer-events:auto;"></canvas>
   </div>
 
   <p style="text-align:center; margin-top:0.5em;">
     <button id="bw-btn">Czarnobiałe</button>
-    <button id="pen-btn">Pisak</button>
+    <label style="margin-left:1em;">Jasność: <input type="range" id="brightness-slider" min="0" max="200" value="100">%</label>
+    <button id="pen-btn" style="margin-left:1em;">Pisak</button>
+    <label style="margin-left:1em;">Kolor: <select id="color-picker">
+      <option value="black">Czarny</option>
+      <option value="white">Biały</option>
+      <option value="red">Czerwony</option>
+      <option value="green">Zielony</option>
+      <option value="blue">Niebieski</option>
+    </select></label>
     <button id="eraser-btn">Gumka</button>
-    <button id="save-btn">Zapisz maskę</button>
+    <button id="undo-btn" style="margin-left:1em;">Cofnij</button>
+    <button id="redo-btn" style="margin-left:1em;">Ponów</button>
+    <button id="save-btn" style="margin-left:1em;">Zapisz maskę</button>
+    <span id="size-display" style="margin-left:1em;">Rozmiar: 5</span>
   </p>
 
   <img id="orig-img" src="{{ base_image_url }}" style="display:none;">
@@ -25,86 +32,196 @@
   {% endif %}
 
   <script>
-    const img      = document.getElementById('orig-img');
-    const maskImg  = document.getElementById('mask-img');
-    const base     = document.getElementById('baseCanvas');
-    const over     = document.getElementById('overlayCanvas');
-    const container= document.getElementById('canvas-container');
-    const bctx     = base.getContext('2d');
-    const octx     = over.getContext('2d');
+    // history for undo/redo
+    const undoStack = [];
+    const redoStack = [];
+    function saveState() {
+      if (undoStack.length >= 50) undoStack.shift();
+      undoStack.push(obCtx.getImageData(0, 0, overlayBuffer.width, overlayBuffer.height));
+      redoStack.length = 0;
+    }
 
-    let tool = 'pen', drawing = false;
-    const penSize = 5;
+    const img = document.getElementById('orig-img');
+    const maskImg = document.getElementById('mask-img');
+    const base = document.getElementById('baseCanvas');
+    const over = document.getElementById('overlayCanvas');
+    const container = document.getElementById('canvas-container');
+    const sizeDisp = document.getElementById('size-display');
+    const brightnessSlider = document.getElementById('brightness-slider');
+    const colorPicker = document.getElementById('color-picker');
 
-    function setupCanvases(w, h) {
-      // wymiar atrybutów
-      base.width = over.width = w;
-      base.height= over.height= h;
-      // styl kontenera
-      container.style.width  = w + 'px';
+    let scale = 1, offsetX = 0, offsetY = 0;
+    let tool = 'pen', drawing = false, panning = false;
+    let penSize = 5, qDown = false;
+    let lastPan = {x: 0, y: 0};
+
+    const overlayBuffer = document.createElement('canvas');
+    const obCtx = overlayBuffer.getContext('2d');
+
+    let useGrayscale = false;
+    let brightness = 100;
+
+    function updateSizeDisplay() {
+      sizeDisp.textContent = 'Rozmiar: ' + penSize;
+      obCtx.lineWidth = penSize;
+      obCtx.lineCap = 'round';
+      obCtx.lineJoin = 'round';
+    }
+
+    function applyBaseFilters(ctx) {
+      const b = brightness;
+      const gs = useGrayscale ? 'grayscale(100%) ' : '';
+      ctx.filter = `${gs}brightness(${b}%)`;
+    }
+
+    function setupCanvases() {
+      const maxW = window.innerWidth * 0.9;
+      const maxH = window.innerHeight * 0.7;
+      const ratio = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+      const w = img.naturalWidth * ratio;
+      const h = img.naturalHeight * ratio;
+      base.width = over.width = overlayBuffer.width = w;
+      base.height = over.height = overlayBuffer.height = h;
+      container.style.width = w + 'px';
       container.style.height = h + 'px';
-      // przygotuj contexty
-      bctx.lineCap = bctx.lineJoin = 'round';
-      octx.lineCap = octx.lineJoin = 'round';
-      octx.lineWidth = penSize;
-      octx.strokeStyle = 'white';
+      updateSizeDisplay();
+      draw();
+    }
+
+    function draw() {
+      const bctx = base.getContext('2d');
+      bctx.setTransform(1, 0, 0, 1, 0, 0);
+      bctx.clearRect(0, 0, base.width, base.height);
+      bctx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+      applyBaseFilters(bctx);
+      bctx.drawImage(img, 0, 0, base.width, base.height);
+      bctx.filter = 'none';
+
+      const octx = over.getContext('2d');
+      octx.setTransform(1, 0, 0, 1, 0, 0);
+      octx.clearRect(0, 0, over.width, over.height);
+      octx.setTransform(scale, 0, 0, scale, offsetX, offsetY);
+      octx.drawImage(overlayBuffer, 0, 0);
+    }
+
+    function windowToCanvas(x, y) {
+      const rect = over.getBoundingClientRect();
+      return {
+        x: (x - rect.left - offsetX) / scale,
+        y: (y - rect.top - offsetY) / scale
+      };
     }
 
     img.onload = () => {
-      const maxW = window.innerWidth * 0.9;
-      const maxH = window.innerHeight * 0.7;
-      const ratio = Math.min(maxW/img.naturalWidth, maxH/img.naturalHeight,1);
-      const w = img.naturalWidth * ratio;
-      const h = img.naturalHeight * ratio;
-      setupCanvases(w, h);
-      // narysuj tło
-      bctx.drawImage(img,0,0,w,h);
-      // jeśli edycja: nałóż istniejącą maskę
-      {% if overlay_image_url %}
+      setupCanvases();
+      if (maskImg) {
         maskImg.onload = () => {
-          octx.drawImage(maskImg,0,0,over.width,over.height);
+          obCtx.drawImage(maskImg, 0, 0, overlayBuffer.width, overlayBuffer.height);
+          draw();
         };
-      {% endif %}
+      }
     };
 
     document.getElementById('bw-btn').onclick = () => {
-      bctx.filter = 'grayscale(100%)';
-      bctx.drawImage(img,0,0,base.width,base.height);
-      bctx.filter = 'none';
+      useGrayscale = !useGrayscale;
+      draw();
+    };
+    brightnessSlider.oninput = () => {
+      brightness = brightnessSlider.value;
+      draw();
     };
     document.getElementById('pen-btn').onclick = () => {
       tool = 'pen';
-      octx.globalCompositeOperation = 'source-over';
+      obCtx.strokeStyle = colorPicker.value;
+    };
+    colorPicker.onchange = () => {
+      if (tool === 'pen') obCtx.strokeStyle = colorPicker.value;
     };
     document.getElementById('eraser-btn').onclick = () => {
       tool = 'eraser';
-      octx.globalCompositeOperation = 'destination-out';
+      obCtx.strokeStyle = null;
     };
 
-    // rysowanie na overlay
     over.addEventListener('mousedown', e => {
-      drawing = true;
-      const rect = over.getBoundingClientRect();
-      const x = (e.clientX - rect.left)*(over.width/rect.width);
-      const y = (e.clientY - rect.top)*(over.height/rect.height);
-      octx.beginPath();
-      octx.moveTo(x,y);
+      if (e.button === 0) {
+        saveState();
+        drawing = true;
+        const pt = windowToCanvas(e.clientX, e.clientY);
+        obCtx.beginPath();
+        obCtx.moveTo(pt.x, pt.y);
+      } else if (e.button === 1) {
+        panning = true;
+        lastPan = {x: e.clientX, y: e.clientY};
+      }
     });
     over.addEventListener('mousemove', e => {
-      if (!drawing) return;
-      const rect = over.getBoundingClientRect();
-      const x = (e.clientX - rect.left)*(over.width/rect.width);
-      const y = (e.clientY - rect.top)*(over.height/rect.height);
-      octx.lineTo(x,y);
-      octx.stroke();
+      if (drawing) {
+        const pt = windowToCanvas(e.clientX, e.clientY);
+        obCtx.globalCompositeOperation = tool === 'eraser' ? 'destination-out' : 'source-over';
+        if (tool !== 'eraser') {
+          obCtx.strokeStyle = colorPicker.value;
+        }
+        obCtx.lineTo(pt.x, pt.y);
+        obCtx.stroke();
+        draw();
+      } else if (panning) {
+        const dx = e.clientX - lastPan.x;
+        const dy = e.clientY - lastPan.y;
+        offsetX += dx;
+        offsetY += dy;
+        lastPan = {x: e.clientX, y: e.clientY};
+        draw();
+      }
     });
-    ['mouseup','mouseleave'].forEach(evt =>
-      over.addEventListener(evt, () => drawing = false)
+    ['mouseup', 'mouseleave'].forEach(evt =>
+      over.addEventListener(evt, e => {
+        if (e.button === 0) drawing = false;
+        if (e.button === 1) panning = false;
+      })
     );
 
-    // zapis maski (tylko overlay)
+    window.addEventListener('keydown', e => { if (e.key.toLowerCase() === 'q') qDown = true; });
+    window.addEventListener('keyup', e => { if (e.key.toLowerCase() === 'q') qDown = false; });
+
+    over.addEventListener('wheel', e => {
+      e.preventDefault();
+      if (qDown) {
+        penSize = Math.min(100, Math.max(1, penSize - Math.sign(e.deltaY)));
+        updateSizeDisplay();
+      } else {
+        const rect = over.getBoundingClientRect();
+        const mx = e.clientX;
+        const my = e.clientY;
+        const before = windowToCanvas(mx, my);
+        const zoom = e.deltaY < 0 ? 1.1 : 0.9;
+        scale = Math.min(10, Math.max(0.1, scale * zoom));
+        offsetX = mx - rect.left - before.x * scale;
+        offsetY = my - rect.top - before.y * scale;
+        draw();
+      }
+    }, { passive: false });
+
+    // undo/redo handlers
+    document.getElementById('undo-btn').onclick = () => {
+      if (!undoStack.length) return;
+      const current = obCtx.getImageData(0,0,overlayBuffer.width,overlayBuffer.height);
+      redoStack.push(current);
+      const prev = undoStack.pop();
+      obCtx.putImageData(prev,0,0);
+      draw();
+    };
+    document.getElementById('redo-btn').onclick = () => {
+      if (!redoStack.length) return;
+      const current = obCtx.getImageData(0,0,overlayBuffer.width,overlayBuffer.height);
+      undoStack.push(current);
+      const next = redoStack.pop();
+      obCtx.putImageData(next,0,0);
+      draw();
+    };
+
+
     document.getElementById('save-btn').onclick = () => {
-      const dataURL = over.toDataURL('image/png');
+      const dataURL = overlayBuffer.toDataURL('image/png');
       localStorage.setItem('bwImage', dataURL);
       window.location.href = "{{ redirect_url }}";
     };
