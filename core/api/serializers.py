@@ -11,13 +11,16 @@ class BadanieSerializer(serializers.ModelSerializer):
     tagi = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Tag.objects.all(), required=False
     )
+    # class Meta:
+    #     model = Badanie
+    #     fields = [
+    #         'id', 'pacjent', 'nazwa', 'zdjecie',
+    #         'opis', 'data', 'tagi'
+    #     ]
+    #     read_only_fields = ['data']
     class Meta:
         model = Badanie
-        fields = [
-            'id', 'pacjent', 'nazwa', 'zdjecie',
-            'opis', 'data', 'tagi'
-        ]
-        read_only_fields = ['data']
+        fields = ['id', 'pacjent', 'nazwa', 'zdjecie', 'opis', 'data', 'tagi']
 
 class AnalizaSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,3 +30,8 @@ class AnalizaSerializer(serializers.ModelSerializer):
             'zdjecie', 'opis', 'data'
         ]
         read_only_fields = ['data']
+
+class TagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Tag
+        fields = ['id', 'nazwa']
