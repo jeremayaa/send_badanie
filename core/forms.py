@@ -11,16 +11,16 @@ class PacjentForm(forms.ModelForm):
 #         model = Badanie
 #         # na razie bez tagów – tylko pacjent, obraz i opis
 #         fields = ['pacjent', 'nazwa', 'zdjecie', 'opis']
+from django.utils import timezone
 class BadanieForm(forms.ModelForm):
-    tagi = forms.ModelMultipleChoiceField(
-        queryset=Tag.objects.all(),
-        required=False,
-        widget=forms.CheckboxSelectMultiple
+    data = forms.DateField(
+        widget=forms.DateInput(attrs={'type':'date'}),
+        initial=lambda: timezone.now().date()
     )
 
     class Meta:
         model = Badanie
-        fields = ['pacjent', 'nazwa', 'zdjecie', 'opis', 'tagi']
+        fields = ['pacjent', 'nazwa', 'data', 'zdjecie', 'opis', 'tagi']
         
 class AnalizaStandardForm(forms.ModelForm):
     class Meta:

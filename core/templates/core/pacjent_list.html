@@ -2,22 +2,76 @@
 {% block title %}Pacjenci{% endblock %}
 {% block content %}
   <h2>Pacjenci</h2>
+  <!-- przełącznik scope -->
   <p>
-    <a href="{% url 'core:pacjent-list' %}?scope=mine">Twoi pacjenci</a> |
-    <a href="{% url 'core:pacjent-list' %}?scope=all">Wszyscy pacjenci</a>
+    <label>
+      <input type="radio" name="scope" value="mine" checked class="scope-radio">
+      Twoi pacjenci
+    </label>
+    &nbsp;|&nbsp;
+    <label>
+      <input type="radio" name="scope" value="all" class="scope-radio">
+      Wszyscy pacjenci
+    </label>
   </p>
-  <p><a href="{% url 'core:pacjent-add' %}">+ Dodaj pacjenta</a></p>
-  <ul>
-    {% for pacjent in pacjenci %}
-      <li>
-        <a href="{% url 'core:pacjent-detail' pacjent.pk %}">
-          {{ pacjent.imie }} {{ pacjent.nazwisko }}
-        </a>
-        <!-- nowy przycisk obok -->
-        <a href="{% url 'core:badanie-add' %}?pacjent={{ pacjent.pk }}">[+ Dodaj badanie]</a>
-      </li>
-    {% empty %}
-      <li>Brak pacjentów.</li>
-    {% endfor %}
-  </ul>
+
+  <p>
+    <button id="sort-first">Sortuj wg imion</button> |
+    <button id="sort-last">Sortuj wg nazwisk</button> |
+    <button id="sort-latest">Sortuj wg ostatniego badania</button> |
+    <!-- <a href="{% url 'core:pacjent-add' %}">+ Dodaj pacjenta</a> -->
+  </p>
+
+  <!-- tu wstawi JS listę -->
+  <ul id="pacjenci-list"></ul>
+
+  <script>
+    const listEl  = document.getElementById('pacjenci-list');
+    let ordering   = 'nazwisko';
+
+    // odczyt wybranego scope
+    const getScope = () => {
+      return document.querySelector('input[name="scope"]:checked').value;
+    };
+
+    // loader pacjentów
+    function loadPacjenci(){
+      const params = new URLSearchParams();
+      params.append('ordering', ordering);
+      params.append('scope', getScope());
+      fetch(`/api/pacjenci/?${params}`, {
+        headers: {'Accept':'application/json'}
+      })
+      .then(r => r.json())
+      .then(data => {
+        listEl.innerHTML = '';
+        if (!data.length) {
+          listEl.innerHTML = '<li>Brak pacjentów.</li>';
+          return;
+        }
+        data.forEach(p => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <a href="/pacjenci/${p.id}/">
+              ${p.imie} ${p.nazwisko}
+            </a>
+            &nbsp;
+            <a href="/badania/dodaj/?pacjent=${p.id}">
+              [+ Dodaj badanie]
+            </a>
+          `;
+          listEl.appendChild(li);
+        });
+      });
+    }
+
+    // eventy dla radiobuttonów i przycisków sortowania
+    document.querySelectorAll('.scope-radio')
+      .forEach(rb => rb.onchange = loadPacjenci);
+    document.getElementById('sort-first').onclick = () => { ordering='imie'; loadPacjenci(); };
+    document.getElementById('sort-last').onclick  = () => { ordering='nazwisko'; loadPacjenci(); };
+    document.getElementById('sort-latest').onclick= () => { ordering='-latest_badanie'; loadPacjenci(); };
+
+    window.addEventListener('DOMContentLoaded', loadPacjenci);
+  </script>
 {% endblock %}
