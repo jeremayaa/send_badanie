@@ -2,48 +2,69 @@
 {% block title %}Badania{% endblock %}
 {% block content %}
   <h2>Badania</h2>
-
   <p>
     <a href="{% url 'core:badanie-add' %}">+ Nowe badanie</a>
     &nbsp;|&nbsp;
-    <button type="button" id="toggle-filter-btn">Filtruj po tagach</button>
+    <button id="toggle-filter-btn">Filtruj po tagach</button>
   </p>
-
+  
   <div id="filter-container" style="display:none; margin-left:1em;">
-    <form method="get">
-      {% for tag in all_tags %}
-        <label>
-          <input type="checkbox"
-                 name="tags"
-                 value="{{ tag.pk }}"
-                 {% if tag.pk in selected_tags %}checked{% endif %}>
-          {{ tag.nazwa }}
-        </label><br>
-      {% endfor %}
-      <button type="submit">Filtruj</button>
-      <a href="{% url 'core:badanie-list' %}">Wyczyść</a>
-    </form>
-  </div>
-
-  <ul>
-    {% for badanie in badania %}
-      <li>
-        <a href="{% url 'core:badanie-detail' badanie.pk %}">
-          {{ badanie.nazwa }}
-        </a>
-        {% if badanie.tagi.all %}
-          [{{ badanie.tagi.all|join:", " }}]
-        {% endif %}
-      </li>
-    {% empty %}
-      <li>Brak badań.</li>
+    {% for tag in all_tags %}
+      <label>
+        <input type="checkbox" value="{{ tag.pk }}" class="filter-tag">
+        {{ tag.nazwa }}
+      </label><br>
     {% endfor %}
+  </div>
+  
+  <ul id="badania-list">
+    <!-- tutaj JS wstawi <li>…</li> -->
   </ul>
 
   <script>
-    document.getElementById('toggle-filter-btn').onclick = () => {
-      const f = document.getElementById('filter-container');
-      f.style.display = f.style.display === 'none' ? 'block' : 'none';
+    const listEl    = document.getElementById('badania-list');
+    const toggler   = document.getElementById('toggle-filter-btn');
+    const filtBox   = document.getElementById('filter-container');
+    const checkTags = () => [...document.querySelectorAll('.filter-tag')]
+                          .filter(i=>i.checked)
+                          .map(i=>i.value);
+  
+    // Przełącz widok filtrów
+    toggler.onclick = () => {
+      filtBox.style.display = filtBox.style.display==='none'?'block':'none';
     };
+  
+    // Funkcja pobierająca badania
+    function loadBadania(){
+      const params = new URLSearchParams();
+      checkTags().forEach(id=>params.append('tagi', id));
+      fetch(`/api/badania/?${params.toString()}`, {
+        headers: {'Accept':'application/json'}
+      })
+      .then(r=>r.json())
+      .then(data => {
+        listEl.innerHTML = '';
+        if(data.length===0){
+          listEl.innerHTML = '<li>Brak badań.</li>';
+          return;
+        }
+        data.forEach(b=>{
+          const tags = b.tagi.map(t=>t.nazwa).join(', ');
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <a href="/badania/${b.id}/">${b.nazwa}</a>
+            ${tags?` [${tags}]`:''}
+          `;
+          listEl.appendChild(li);
+        });
+      });
+    }
+  
+    // Podpinamy zmianę filtrów i loader przy starcie
+    document.querySelectorAll('.filter-tag').forEach(cb=>{
+      cb.onchange = loadBadania;
+    });
+    window.addEventListener('DOMContentLoaded', loadBadania);
   </script>
+  
 {% endblock %}
