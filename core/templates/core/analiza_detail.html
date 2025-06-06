@@ -2,48 +2,54 @@
 {% block title %}{{ analiza.nazwa }}{% endblock %}
 {% block content %}
   <h2>Analiza: {{ analiza.nazwa }}</h2>
-  <div>
-    <img src="{{ analiza.zdjecie.url }}"
-         alt="{{ analiza.nazwa }}"
-         style="max-width:300px;">
-  </div>
-  <p>
-    <a href="{{ analiza.zdjecie.url }}" download>
-      Pobierz zdjęcie
-    </a>
-  </p>
-  <p>{{ analiza.opis|default:"(brak opisu)" }}</p>
-  <p>
-    <strong>Badanie:</strong>
-    <a href="{% url 'core:badanie-detail' analiza.badanie.pk %}">
-      <img src="{{ analiza.badanie.zdjecie.url }}"
-           alt="Badanie #{{ analiza.badanie.pk }}"
-           style="max-width:80px; vertical-align:middle;">
-      {{ analiza.badanie.nazwa }}
-    </a>
-  </p>
 
-  {% if analiza.badanie.pacjent.lekarz.user == user %}
-    <p>
-      <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
-      <form method="post"
-            action="{% url 'core:analiza-delete' analiza.pk %}"
-            style="display:inline"
-            onsubmit="return confirm('Czy na pewno chcesz usunąć analizę?');">
-        {% csrf_token %}
-        <button type="submit">Usuń</button>
-      </form>
-    </p>
+  <div style="display: flex; gap: 2em; align-items: flex-start;">
 
-    {% if analiza.badanie.pacjent.lekarz.user == user %}
+    <!-- LEFT COLUMN: Image -->
+    <div>
+      {% if analiza.zdjecie %}
+        <img src="{{ analiza.zdjecie.url }}"
+             alt="{{ analiza.nazwa }}"
+             style="width: 300px; height: 300px; object-fit: cover; border-radius: 8px;">
+        <p style="margin-top: 0.5em;">
+          <a href="{{ analiza.zdjecie.url }}" download>Pobierz zdjęcie</a>
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN: Info and Actions -->
+    <div style="flex-grow: 1;">
+      <p>{{ analiza.opis|default:"(brak opisu)" }}</p>
+
       <p>
-        <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
-        |
-        <a href="{% url 'core:program-analyze-analiza' analiza_pk=analiza.pk %}">
-          Edytuj w programie
+        <strong>Badanie:</strong>
+        <a href="{% url 'core:badanie-detail' analiza.badanie.pk %}" style="display: inline-flex; align-items: center; gap: 8px;">
+          <img src="{{ analiza.badanie.zdjecie.url }}"
+               alt="Badanie #{{ analiza.badanie.pk }}"
+               style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px;">
+          {{ analiza.badanie.nazwa }}
         </a>
-        <!-- <form ...>Usuń…</form> -->
       </p>
-    {% endif %}
-  {% endif %}
+
+      {% if analiza.badanie.pacjent.lekarz.user == user %}
+        <div style="margin-top: 1em;">
+          <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
+          <form method="post"
+                action="{% url 'core:analiza-delete' analiza.pk %}"
+                style="display:inline"
+                onsubmit="return confirm('Czy na pewno chcesz usunąć analizę?');">
+            {% csrf_token %}
+            <button type="submit">Usuń</button>
+          </form>
+        </div>
+
+        <div style="margin-top: 1em;">
+          <a href="{% url 'core:program-analyze-analiza' analiza_pk=analiza.pk %}">
+            Edytuj w programie
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
 {% endblock %}

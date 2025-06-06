@@ -2,61 +2,98 @@
 {% block title %}{{ badanie.nazwa }}{% endblock %}
 {% block content %}
   <h2>Badanie: {{ badanie.nazwa }}</h2>
-  <div>
-    <img src="{{ badanie.zdjecie.url }}" alt="{{ badanie.nazwa }}" style="max-width:300px;">
-  </div>
-  <p>
-    <a href="{{ badanie.zdjecie.url }}" download>
-      Pobierz zdjęcie
-    </a>
-  </p>
-  <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
 
-  <h3>Tagi badania</h3>
-  <ul>
-    {% for tag in badanie.tagi.all %}
-      <li>{{ tag.nazwa }}</li>
-    {% empty %}
-      <li>Brak tagów.</li>
-    {% endfor %}
-  </ul>
+  <div style="display: flex; gap: 2em; align-items: flex-start;">
 
-  {% if badanie.pacjent.lekarz.user == user %}
-    <p>
-      <a href="{% url 'core:badanie-edit' badanie.pk %}">Edytuj</a>
-      <form method="post"
-            action="{% url 'core:badanie-delete' badanie.pk %}"
-            style="display:inline"
-            onsubmit="return confirm('Czy na pewno chcesz usunąć badanie?');">
-        {% csrf_token %}
-        <button type="submit">Usuń</button>
-      </form>
-    </p>
-  {% endif %}
+    <!-- LEFT COLUMN: Badanie details -->
+    <div style="flex: 1;">
+      {% if badanie.zdjecie %}
+        <div>
+          <img src="{{ badanie.zdjecie.url }}" alt="{{ badanie.nazwa }}"
+            style="width:300px; height:300px; object-fit:cover; border-radius:8px;">
+        </div>
+        <p>
+          <a href="{{ badanie.zdjecie.url }}" download>
+            Pobierz zdjęcie
+          </a>
+        </p>
+      {% endif %}
 
-  <h3>Analizy</h3>
-  <p>
-    <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">
-      + Dodaj analizę
-    </a>
-    <p>
-      <a href="{% url 'core:program-analyze-badanie' badanie_pk=badanie.pk %}">
-        Rozpocznij analizę w programie
-      </a>
-    </p>
-  </p>
-  <ul>
-    {% for analiza in badanie.analizy.all %}
-      <li style="margin-bottom:0.5em;">
-        <a href="{% url 'core:analiza-detail' analiza.pk %}">
-          <img src="{{ analiza.zdjecie.url }}"
-               alt="{{ analiza.nazwa }}"
-               style="max-width:80px; vertical-align:middle;">
-          {{ analiza.nazwa }}
+      <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
+
+      <h3>Tagi badania</h3>
+      <ul>
+        {% for tag in badanie.tagi.all %}
+          <li>{{ tag.nazwa }}</li>
+        {% empty %}
+          <li>Brak tagów.</li>
+        {% endfor %}
+      </ul>
+
+      {% if badanie.pacjent.lekarz.user == user %}
+        <p>
+          <a href="{% url 'core:badanie-edit' badanie.pk %}">Edytuj</a>
+          <form method="post"
+                action="{% url 'core:badanie-delete' badanie.pk %}"
+                style="display:inline"
+                onsubmit="return confirm('Czy na pewno chcesz usunąć badanie?');">
+            {% csrf_token %}
+            <button type="submit">Usuń</button>
+          </form>
+        </p>
+      {% endif %}
+    </div>
+
+    <!-- RIGHT COLUMN: Analyses -->
+    <div style="flex: 1;">
+      <h3>Analizy</h3>
+
+      <p>
+        <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">
+          + Dodaj analizę
         </a>
-      </li>
-    {% empty %}
-      <li>Brak analiz.</li>
-    {% endfor %}
-  </ul>
+        <br><br>
+        <a href="{% url 'core:program-analyze-badanie' badanie_pk=badanie.pk %}">
+          Rozpocznij analizę w programie
+        </a>
+      </p>
+
+      <style>
+        .analiza-item {
+          display: flex;
+          align-items: center;
+          padding: 8px;
+          margin-bottom: 0.5em;
+          border-radius: 6px;
+          transition: background-color 0.2s;
+          text-decoration: none;
+          color: inherit;
+        }
+
+        .analiza-item:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .analiza-item img {
+          max-width: 80px;
+          height: auto;
+          margin-right: 10px;
+          vertical-align: middle;
+          border-radius: 4px;
+        }
+      </style>
+
+      <div>
+        {% for analiza in badanie.analizy.all %}
+          <a href="{% url 'core:analiza-detail' analiza.pk %}" class="analiza-item">
+            <img src="{{ analiza.zdjecie.url }}" alt="{{ analiza.nazwa }}">
+            {{ analiza.nazwa }}
+          </a>
+        {% empty %}
+          <p>Brak analiz.</p>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div>
 {% endblock %}

@@ -2,75 +2,125 @@
 {% block title %}Pacjenci{% endblock %}
 {% block content %}
   <h2>Pacjenci</h2>
-  <!-- przełącznik scope -->
-  <p>
-    <label>
-      <input type="radio" name="scope" value="mine" checked class="scope-radio">
-      Twoi pacjenci
-    </label>
-    &nbsp;|&nbsp;
-    <label>
-      <input type="radio" name="scope" value="all" class="scope-radio">
-      Wszyscy pacjenci
-    </label>
-  </p>
 
-  <p>
-    <button id="sort-first">Sortuj wg imion</button> |
-    <button id="sort-last">Sortuj wg nazwisk</button> |
-    <button id="sort-latest">Sortuj wg ostatniego badania</button> |
-    <a href="{% url 'core:pacjent-add' %}">+ Dodaj pacjenta</a>
-  </p>
+  <div style="display: flex; gap: 2em; flex-direction: row-reverse;">
+    <!-- Left: Table of patients -->
+    <div style="flex-grow: 1;">
+      <style>
+        #pacjenci-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
 
-  <!-- tu wstawi JS listę -->
-  <ul id="pacjenci-list"></ul>
+        #pacjenci-table th, #pacjenci-table td {
+          padding: 6px 10px;
+          text-align: left;
+        }
+
+        #pacjenci-table th.mini,
+        #pacjenci-table td.mini {
+          width: 110px;
+        }
+
+        #pacjenci-table th.add,
+        #pacjenci-table td.add {
+          width: 140px;
+        }
+
+        .clickable-row {
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .clickable-row:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+
+        .pacjent-mini {
+          width: 100px;
+          height: 100px;
+          object-fit: cover;
+          background-color: #ccc;
+        }
+
+        .add-button {
+          padding: 6px 10px;
+          text-decoration: none;
+          background-color: #2d7e7e;
+          color: white;
+          border-radius: 4px;
+          display: inline-block;
+        }
+
+        .add-button:hover {
+          background-color: #256b6b;
+        }
+      </style>
+
+      <table id="pacjenci-table">
+        <thead>
+          <tr>
+            <th class="mini">Miniatura</th>
+            <th>Imię i nazwisko</th>
+            <th class="add">Akcja</th>
+          </tr>
+        </thead>
+        <tbody id="pacjenci-list"></tbody>
+      </table>
+    </div>
+
+    <!-- Right: Buttons -->
+    <div style="min-width: 220px;">
+      <p>
+        <button id="sort-first">Sortuj wg imion</button><br><br>
+        <button id="sort-last">Sortuj wg nazwisk</button><br><br>
+        <button id="sort-latest">Sortuj wg ostatniego badania</button><br><br>
+        <a href="{% url 'core:pacjent-add' %}" class="add-button">+ Dodaj pacjenta</a>
+      </p>
+    </div>
+  </div>
 
   <script>
-    const listEl  = document.getElementById('pacjenci-list');
-    let ordering   = 'nazwisko';
+    const listEl = document.getElementById('pacjenci-list');
+    let ordering = 'nazwisko';
 
-    // odczyt wybranego scope
-    const getScope = () => {
-      return document.querySelector('input[name="scope"]:checked').value;
-    };
-
-    // loader pacjentów
-    function loadPacjenci(){
+    function loadPacjenci() {
       const params = new URLSearchParams();
       params.append('ordering', ordering);
-      params.append('scope', getScope());
+      params.append('scope', 'mine');
       fetch(`/api/pacjenci/?${params}`, {
-        headers: {'Accept':'application/json'}
+        headers: { 'Accept': 'application/json' }
       })
       .then(r => r.json())
       .then(data => {
         listEl.innerHTML = '';
         if (!data.length) {
-          listEl.innerHTML = '<li>Brak pacjentów.</li>';
+          listEl.innerHTML = '<tr><td colspan="3">Brak pacjentów.</td></tr>';
           return;
         }
         data.forEach(p => {
-          const li = document.createElement('li');
-          li.innerHTML = `
-            <a href="/pacjenci/${p.id}/">
-              ${p.imie} ${p.nazwisko}
-            </a>
-            &nbsp;
-            <a href="/badania/dodaj/?pacjent=${p.id}">
-              [+ Dodaj badanie]
-            </a>
+          const tr = document.createElement('tr');
+          tr.className = 'clickable-row';
+
+          tr.onclick = () => window.location.href = `/pacjenci/${p.id}/`;
+
+          tr.innerHTML = `
+            <td class="mini">
+              <img src="/static/usericon.png" alt="miniatura" class="pacjent-mini">
+            </td>
+            <td>${p.imie} ${p.nazwisko}</td>
+            <td class="add">
+              <a href="/badania/dodaj/?pacjent=${p.id}" class="add-button" onclick="event.stopPropagation()">Dodaj badanie</a>
+            </td>
           `;
-          listEl.appendChild(li);
+          listEl.appendChild(tr);
         });
       });
     }
 
-    // eventy dla radiobuttonów i przycisków sortowania
-    document.querySelectorAll('.scope-radio')
-      .forEach(rb => rb.onchange = loadPacjenci);
-    document.getElementById('sort-first').onclick = () => { ordering='imie'; loadPacjenci(); };
-    document.getElementById('sort-last').onclick  = () => { ordering='nazwisko'; loadPacjenci(); };
-    document.getElementById('sort-latest').onclick= () => { ordering='-latest_badanie'; loadPacjenci(); };
+    document.getElementById('sort-first').onclick = () => { ordering = 'imie'; loadPacjenci(); };
+    document.getElementById('sort-last').onclick = () => { ordering = 'nazwisko'; loadPacjenci(); };
+    document.getElementById('sort-latest').onclick = () => { ordering = '-latest_badanie'; loadPacjenci(); };
 
     window.addEventListener('DOMContentLoaded', loadPacjenci);
   </script>

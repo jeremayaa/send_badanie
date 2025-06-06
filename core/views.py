@@ -21,6 +21,7 @@ class PacjentListView(LoginRequiredMixin, ListView):
         else:
             # wszyscy pacjenci
             return Pacjent.objects.all()
+            # return None
 
 
 from django.urls import reverse_lazy

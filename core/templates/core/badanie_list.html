@@ -2,69 +2,118 @@
 {% block title %}Badania{% endblock %}
 {% block content %}
   <h2>Badania</h2>
-  <p>
-    <a href="{% url 'core:badanie-add' %}">+ Nowe badanie</a>
-    &nbsp;|&nbsp;
-    <button id="toggle-filter-btn">Filtruj po tagach</button>
-  </p>
   
-  <div id="filter-container" style="display:none; margin-left:1em;">
-    {% for tag in all_tags %}
-      <label>
-        <input type="checkbox" value="{{ tag.pk }}" class="filter-tag">
-        {{ tag.nazwa }}
-      </label><br>
-    {% endfor %}
+  <div style="display: flex; gap: 2em;">
+    <!-- Left column: Controls -->
+    <div style="min-width: 200px;">
+      <p>
+        <!-- <a href="{% url 'core:badanie-add' %}">+ Nowe badanie</a> -->
+        <!-- <br><br> -->
+        <button id="toggle-filter-btn">Filtruj po tagach</button>
+      </p>
+
+      <div id="filter-container" style="display:none; margin-top: 1em;">
+        {% for tag in all_tags %}
+          <label>
+            <input type="checkbox" value="{{ tag.pk }}" class="filter-tag">
+            {{ tag.nazwa }}
+          </label><br>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Right column: Data table -->
+    <div style="flex-grow: 1;">
+      <style>
+        #badania-table {
+          width: 100%;
+          border-collapse: collapse;
+        }
+
+        #badania-table th, #badania-table td {
+          padding: 6px 10px;
+          text-align: left;
+        }
+
+        #badania-table th.mini,
+        #badania-table td.mini {
+          width: 110px;
+        }
+
+        #badania-table th.date,
+        #badania-table td.date {
+          width: 130px;
+        }
+
+        .clickable-row {
+          cursor: pointer;
+          transition: background-color 0.2s;
+        }
+
+        .clickable-row:hover {
+          background-color: rgba(0, 0, 0, 0.05);
+        }
+      </style>
+
+      <table id="badania-table">
+        <thead>
+          <tr>
+            <th class="mini">Miniatura</th>
+            <th>Nazwa</th>
+            <th class="date">Data</th>
+          </tr>
+        </thead>
+        <tbody id="badania-list"></tbody>
+      </table>
+    </div>
   </div>
-  
-  <ul id="badania-list">
-    <!-- tutaj JS wstawi <li>…</li> -->
-  </ul>
 
   <script>
     const listEl    = document.getElementById('badania-list');
     const toggler   = document.getElementById('toggle-filter-btn');
     const filtBox   = document.getElementById('filter-container');
     const checkTags = () => [...document.querySelectorAll('.filter-tag')]
-                          .filter(i=>i.checked)
-                          .map(i=>i.value);
-  
-    // Przełącz widok filtrów
+                          .filter(i => i.checked)
+                          .map(i => i.value);
+
     toggler.onclick = () => {
-      filtBox.style.display = filtBox.style.display==='none'?'block':'none';
+      filtBox.style.display = filtBox.style.display === 'none' ? 'block' : 'none';
     };
-  
-    // Funkcja pobierająca badania
-    function loadBadania(){
+
+    function loadBadania() {
       const params = new URLSearchParams();
-      checkTags().forEach(id=>params.append('tagi', id));
+      checkTags().forEach(id => params.append('tagi', id));
       fetch(`/api/badania/?${params.toString()}`, {
-        headers: {'Accept':'application/json'}
+        headers: { 'Accept': 'application/json' }
       })
-      .then(r=>r.json())
+      .then(r => r.json())
       .then(data => {
         listEl.innerHTML = '';
-        if(data.length===0){
-          listEl.innerHTML = '<li>Brak badań.</li>';
+        if (data.length === 0) {
+          listEl.innerHTML = '<tr><td colspan="3">Brak badań.</td></tr>';
           return;
         }
-        data.forEach(b=>{
-          const tags = b.tagi.map(t=>t.nazwa).join(', ');
-          const li = document.createElement('li');
-          li.innerHTML = `
-            <a href="/badania/${b.id}/">${b.nazwa}</a>
-            ${tags?` [${tags}]`:''}
+        data.forEach(b => {
+          const tr = document.createElement('tr');
+          tr.className = 'clickable-row';
+          tr.onclick = () => window.location.href = `/badania/${b.id}/`;
+
+          tr.innerHTML = `
+            <td class="mini">
+              ${b.zdjecie ? `<img src="${b.zdjecie}" alt="miniatura" width="100" height="100" style="object-fit:cover;">` : ''}
+            </td>
+            <td>${b.nazwa}</td>
+            <td class="date">${b.data}</td>
           `;
-          listEl.appendChild(li);
+          listEl.appendChild(tr);
         });
       });
     }
-  
-    // Podpinamy zmianę filtrów i loader przy starcie
-    document.querySelectorAll('.filter-tag').forEach(cb=>{
+
+    document.querySelectorAll('.filter-tag').forEach(cb => {
       cb.onchange = loadBadania;
     });
+
     window.addEventListener('DOMContentLoaded', loadBadania);
   </script>
-  
 {% endblock %}
