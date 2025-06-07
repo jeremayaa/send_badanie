@@ -1,0 +1,84 @@
+/* form {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+} */
+
+/* Only full-page forms get this layout */
+form.form-block {
+  background-color: #ffffff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 600px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+}
+
+form.form-block label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+form.form-block input[type="text"],
+form.form-block input[type="date"],
+form.form-block input[type="file"],
+form.form-block select,
+form.form-block textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+form.form-block button[type="submit"] {
+  margin-top: 20px;
+}
+
+form h2 {
+  margin-bottom: 20px;
+}
+
+form label {
+  display: block;
+  margin-top: 15px;
+  font-weight: bold;
+}
+
+form input[type="text"],
+form input[type="date"],
+form input[type="file"],
+form select,
+form textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+form button[type="submit"],
+form button[type="button"] {
+  margin-top: 20px;
+  padding: 10px 15px;
+  border: none;
+  background-color: #2d7e7e;
+  color: white;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+form button:hover {
+  background-color: #256b6b;
+}
+
+#tags-container {
+  margin-top: 10px;
+}

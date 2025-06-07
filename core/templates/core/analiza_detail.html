@@ -1,49 +1,27 @@
 {% extends 'core/base.html' %}
 {% block title %}{{ analiza.nazwa }}{% endblock %}
 {% block content %}
+<div class="detail-container">
   <h2>Analiza: {{ analiza.nazwa }}</h2>
 
-  <div style="display: flex; gap: 2em; align-items: flex-start;">
-
-    <!-- LEFT COLUMN: Image -->
+  <div class="flex-columns">
+    <!-- LEFT: image + buttons -->
     <div>
       {% if analiza.zdjecie %}
-        <img src="{{ analiza.zdjecie.url }}"
-             alt="{{ analiza.nazwa }}"
-             style="width: 300px; height: 300px; object-fit: cover; border-radius: 8px;">
-        <p style="margin-top: 0.5em;">
-          <a href="{{ analiza.zdjecie.url }}" download>Pobierz zdjęcie</a>
-        </p>
+        <img src="{{ analiza.zdjecie.url }}" alt="{{ analiza.nazwa }}" class="detail-image">
+        <p><a href="{{ analiza.zdjecie.url }}" download>Pobierz zdjęcie</a></p>
       {% endif %}
-    </div>
-
-    <!-- RIGHT COLUMN: Info and Actions -->
-    <div style="flex-grow: 1;">
-      <p>{{ analiza.opis|default:"(brak opisu)" }}</p>
-
-      <p>
-        <strong>Badanie:</strong>
-        <a href="{% url 'core:badanie-detail' analiza.badanie.pk %}" style="display: inline-flex; align-items: center; gap: 8px;">
-          <img src="{{ analiza.badanie.zdjecie.url }}"
-               alt="Badanie #{{ analiza.badanie.pk }}"
-               style="width: 80px; height: 80px; object-fit: cover; border-radius: 6px;">
-          {{ analiza.badanie.nazwa }}
-        </a>
-      </p>
 
       {% if analiza.badanie.pacjent.lekarz.user == user %}
-        <div style="margin-top: 1em;">
+        <div class="detail-actions">
           <a href="{% url 'core:analiza-edit' analiza.pk %}">Edytuj</a>
           <form method="post"
                 action="{% url 'core:analiza-delete' analiza.pk %}"
-                style="display:inline"
+                class="inline-delete-form"
                 onsubmit="return confirm('Czy na pewno chcesz usunąć analizę?');">
             {% csrf_token %}
             <button type="submit">Usuń</button>
           </form>
-        </div>
-
-        <div style="margin-top: 1em;">
           <a href="{% url 'core:program-analyze-analiza' analiza_pk=analiza.pk %}">
             Edytuj w programie
           </a>
@@ -51,5 +29,20 @@
       {% endif %}
     </div>
 
+    <!-- RIGHT: details -->
+    <div style="flex: 1;">
+      <div class="detail-meta">
+        <p><strong>Opis:</strong> {{ analiza.opis|default:"(brak opisu)" }}</p>
+      </div>
+
+      <h3>Powiązane badanie</h3>
+      <div class="item-list">
+        <a href="{% url 'core:badanie-detail' analiza.badanie.pk %}" class="item-entry">
+          <img src="{{ analiza.badanie.zdjecie.url }}" alt="Badanie #{{ analiza.badanie.pk }}">
+          {{ analiza.badanie.nazwa }}
+        </a>
+      </div>
+    </div>
   </div>
+</div>
 {% endblock %}

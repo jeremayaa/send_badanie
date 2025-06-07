@@ -3,19 +3,14 @@
   {% if form.instance.pk %}Edytuj analizę{% else %}Dodaj analizę{% endif %}
 {% endblock %}
 {% block content %}
-  <h2>
-    {% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} analizę
-  </h2>
-  <form method="post" enctype="multipart/form-data">
+  <h2>{% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} analizę</h2>
+  <form method="post" enctype="multipart/form-data" class="form-block">
     {% csrf_token %}
-    {{ form.nazwa.label_tag }} {{ form.nazwa }}<br>
-    {{ form.opis.label_tag }}  {{ form.opis }}<br>
-    {{ form.zdjecie }}  {# To ukryte pole file #}
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}
+    {{ form.opis.label_tag }} {{ form.opis }}
+    {{ form.zdjecie }} {# Hidden field #}
 
-    <p>
-      <!-- <button type="button" id="change-filename-btn">Zmień nazwę pliku</button> -->
-      <button type="submit">Zapisz</button>
-    </p>
+    <button type="submit">Zapisz</button>
   </form>
 
   <script>
@@ -26,8 +21,7 @@
       fetch(dataURL)
         .then(res => res.blob())
         .then(blob => {
-          let filename = 'analiza.png';
-          const file = new File([blob], filename, { type: blob.type });
+          const file = new File([blob], 'analiza.png', { type: blob.type });
           const input = document.querySelector('input[type="file"]');
           const dt = new DataTransfer();
           dt.items.add(file);

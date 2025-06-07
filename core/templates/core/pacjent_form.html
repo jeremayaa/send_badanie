@@ -1,12 +1,10 @@
 {% extends 'core/base.html' %}
 {% block title %}
-  {% if form.instance.pk %}Edytuj badanie{% else %}Dodaj badanie{% endif %}
+  {% if form.instance.pk %}Edytuj pacjenta{% else %}Dodaj pacjenta{% endif %}
 {% endblock %}
 {% block content %}
-  <h2>
-    {% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} badanie
-  </h2>
-  <form method="post" enctype="multipart/form-data">
+  <h2>{% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} pacjenta</h2>
+  <form method="post" class="form-block">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Zapisz</button>

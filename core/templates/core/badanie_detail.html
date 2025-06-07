@@ -1,99 +1,61 @@
 {% extends 'core/base.html' %}
 {% block title %}{{ badanie.nazwa }}{% endblock %}
 {% block content %}
+<div class="detail-container">
   <h2>Badanie: {{ badanie.nazwa }}</h2>
 
-  <div style="display: flex; gap: 2em; align-items: flex-start;">
-
-    <!-- LEFT COLUMN: Badanie details -->
+  <div class="flex-columns">
+    <!-- LEFT: image and metadata -->
     <div style="flex: 1;">
       {% if badanie.zdjecie %}
-        <div>
-          <img src="{{ badanie.zdjecie.url }}" alt="{{ badanie.nazwa }}"
-            style="width:300px; height:300px; object-fit:cover; border-radius:8px;">
-        </div>
-        <p>
-          <a href="{{ badanie.zdjecie.url }}" download>
-            Pobierz zdjęcie
-          </a>
-        </p>
+        <img src="{{ badanie.zdjecie.url }}" alt="{{ badanie.nazwa }}" class="detail-image">
+        <p><a href="{{ badanie.zdjecie.url }}" download>Pobierz zdjęcie</a></p>
       {% endif %}
 
       <p>{{ badanie.opis|default:"(brak opisu)" }}</p>
 
-      <h3>Tagi badania</h3>
-      <ul>
+      <h3>Tagi</h3>
+      <ul class="no-bullets">
         {% for tag in badanie.tagi.all %}
           <li>{{ tag.nazwa }}</li>
         {% empty %}
-          <li>Brak tagów.</li>
+          <li class="empty">Brak tagów.</li>
         {% endfor %}
       </ul>
 
       {% if badanie.pacjent.lekarz.user == user %}
-        <p>
+        <div class="detail-actions">
           <a href="{% url 'core:badanie-edit' badanie.pk %}">Edytuj</a>
           <form method="post"
                 action="{% url 'core:badanie-delete' badanie.pk %}"
-                style="display:inline"
+                class="inline-delete-form"
                 onsubmit="return confirm('Czy na pewno chcesz usunąć badanie?');">
             {% csrf_token %}
             <button type="submit">Usuń</button>
           </form>
-        </p>
+        </div>
       {% endif %}
     </div>
 
-    <!-- RIGHT COLUMN: Analyses -->
+    <!-- RIGHT: analizy list -->
     <div style="flex: 1;">
       <h3>Analizy</h3>
-
       <p>
-        <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">
-          + Dodaj analizę
-        </a>
-        <br><br>
-        <a href="{% url 'core:program-analyze-badanie' badanie_pk=badanie.pk %}">
-          Rozpocznij analizę w programie
-        </a>
+        <a href="{% url 'core:analiza-add' badanie_pk=badanie.pk %}">+ Dodaj analizę</a><br><br>
+        <a href="{% url 'core:program-analyze-badanie' badanie_pk=badanie.pk %}">Rozpocznij analizę w programie</a>
       </p>
 
-      <style>
-        .analiza-item {
-          display: flex;
-          align-items: center;
-          padding: 8px;
-          margin-bottom: 0.5em;
-          border-radius: 6px;
-          transition: background-color 0.2s;
-          text-decoration: none;
-          color: inherit;
-        }
-
-        .analiza-item:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
-
-        .analiza-item img {
-          max-width: 80px;
-          height: auto;
-          margin-right: 10px;
-          vertical-align: middle;
-          border-radius: 4px;
-        }
-      </style>
-
-      <div>
+      <div class="item-list">
         {% for analiza in badanie.analizy.all %}
-          <a href="{% url 'core:analiza-detail' analiza.pk %}" class="analiza-item">
+          <a href="{% url 'core:analiza-detail' analiza.pk %}" class="item-entry">
             <img src="{{ analiza.zdjecie.url }}" alt="{{ analiza.nazwa }}">
             {{ analiza.nazwa }}
           </a>
         {% empty %}
-          <p>Brak analiz.</p>
+          <p class="empty">Brak analiz.</p>
         {% endfor %}
       </div>
     </div>
-
   </div>
+</div>
 {% endblock %}

@@ -4,28 +4,26 @@
 {% endblock %}
 {% block content %}
   <h2>{% if form.instance.pk %}Edytuj{% else %}Dodaj{% endif %} badanie</h2>
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" class="form-block">
     {% csrf_token %}
-    {{ form.pacjent.label_tag }} {{ form.pacjent }}<br>
-    {{ form.nazwa.label_tag }}    {{ form.nazwa }}<br>
-    {{ form.data.label_tag }} {{ form.data }}<br>
-    {{ form.zdjecie.label_tag }}  {{ form.zdjecie }}<br>
-    {{ form.opis.label_tag }}     {{ form.opis }}<br>
+    {{ form.pacjent.label_tag }} {{ form.pacjent }}
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}
+    {{ form.data.label_tag }} {{ form.data }}
+    {{ form.zdjecie.label_tag }} {{ form.zdjecie }}
+    {{ form.opis.label_tag }} {{ form.opis }}
 
-    <p>
-      <button type="button" id="toggle-tags-btn">Dodaj tagi</button>
-    </p>
-    <div id="tags-container" style="display:none; margin-left:1em;">
+    <button type="button" id="toggle-tags-btn">Dodaj tagi</button>
+    <div id="tags-container" style="display: none;">
       {{ form.tagi }}
     </div>
 
-    <p><button type="submit">Zapisz</button></p>
+    <button type="submit">Zapisz</button>
   </form>
 
   <script>
     document.getElementById('toggle-tags-btn').onclick = () => {
-      const c = document.getElementById('tags-container');
-      c.style.display = c.style.display === 'none' ? 'block' : 'none';
+      const container = document.getElementById('tags-container');
+      container.style.display = container.style.display === 'none' ? 'block' : 'none';
     };
   </script>
 {% endblock %}

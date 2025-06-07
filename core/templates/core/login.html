@@ -2,7 +2,7 @@
 {% block title %}Logowanie{% endblock %}
 {% block content %}
   <h2>Logowanie</h2>
-  <form method="post">
+  <form method="post" class="form-block">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Zaloguj</button>

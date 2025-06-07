@@ -2,34 +2,29 @@
 {% block title %}Dodaj analizę (programowo){% endblock %}
 {% block content %}
   <h2>Dodaj analizę (programowo)</h2>
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" class="form-block">
     {% csrf_token %}
-    {{ form.nazwa.label_tag }} {{ form.nazwa }}<br>
-    {{ form.opis.label_tag }}  {{ form.opis }}<br>
-    {{ form.zdjecie }} {# pole pliku ukryte #}
+    {{ form.nazwa.label_tag }} {{ form.nazwa }}
+    {{ form.opis.label_tag }} {{ form.opis }}
+    {{ form.zdjecie }} {# ukryte pole pliku #}
 
-    <p>
-      <!-- <button type="button" id="change-filename-btn">Zmień nazwę pliku</button> -->
-      <button type="submit">Zapisz</button>
-    </p>
+    <button type="submit">Zapisz</button>
   </form>
 
   <script>
     document.addEventListener('DOMContentLoaded', () => {
       const dataURL = localStorage.getItem('bwImage');
       if (!dataURL) return;
+
       fetch(dataURL)
         .then(res => res.blob())
         .then(blob => {
-          let filename = 'analiza.png';
+          const filename = 'analiza.png';
+          const file = new File([blob], filename, { type: blob.type });
           const input = document.querySelector('input[type="file"]');
-          function attach(fileName) {
-            const file = new File([blob], fileName, { type: blob.type });
-            const dt = new DataTransfer();
-            dt.items.add(file);
-            input.files = dt.files;
-          }
-          attach(filename);
+          const dt = new DataTransfer();
+          dt.items.add(file);
+          input.files = dt.files;
 
           localStorage.removeItem('bwImage');
         });
