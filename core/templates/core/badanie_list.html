@@ -1,15 +1,18 @@
 {% extends 'core/base.html' %}
+{% load static %}
 {% block title %}Badania{% endblock %}
 {% block content %}
   <h2>Badania</h2>
-  
-  <div style="display: flex; gap: 2em;">
+
+  <link rel="stylesheet" href="{% static 'css/lists.css' %}">
+
+  <div class="list-layout">
     <!-- Left column: Controls -->
-    <div style="min-width: 200px;">
+    <div class="sidebar">
       <p>
-        <!-- <a href="{% url 'core:badanie-add' %}">+ Nowe badanie</a> -->
-        <!-- <br><br> -->
-        <button id="toggle-filter-btn">Filtruj po tagach</button>
+        <button id="toggle-filter-btn">Filtruj po tagach</button><br><br>
+        <button id="sort-name">Sortuj wg nazw</button><br><br>
+        <button id="sort-date">Sortuj wg daty</button>
       </p>
 
       <div id="filter-container" style="display:none; margin-top: 1em;">
@@ -23,39 +26,8 @@
     </div>
 
     <!-- Right column: Data table -->
-    <div style="flex-grow: 1;">
-      <style>
-        #badania-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-
-        #badania-table th, #badania-table td {
-          padding: 6px 10px;
-          text-align: left;
-        }
-
-        #badania-table th.mini,
-        #badania-table td.mini {
-          width: 110px;
-        }
-
-        #badania-table th.date,
-        #badania-table td.date {
-          width: 130px;
-        }
-
-        .clickable-row {
-          cursor: pointer;
-          transition: background-color 0.2s;
-        }
-
-        .clickable-row:hover {
-          background-color: rgba(0, 0, 0, 0.05);
-        }
-      </style>
-
-      <table id="badania-table">
+    <div class="list-content">
+      <table id="badania-table" class="data-table">
         <thead>
           <tr>
             <th class="mini">Miniatura</th>
@@ -65,54 +37,110 @@
         </thead>
         <tbody id="badania-list"></tbody>
       </table>
+
+      <div class="pagination-controls">
+        <button id="prev-page" disabled>« Poprzednia</button>
+        <button id="next-page" disabled>Następna »</button>
+      </div>
     </div>
   </div>
 
   <script>
-    const listEl    = document.getElementById('badania-list');
-    const toggler   = document.getElementById('toggle-filter-btn');
-    const filtBox   = document.getElementById('filter-container');
-    const checkTags = () => [...document.querySelectorAll('.filter-tag')]
-                          .filter(i => i.checked)
-                          .map(i => i.value);
+    const listEl = document.getElementById('badania-list');
+    const toggler = document.getElementById('toggle-filter-btn');
+    const filtBox = document.getElementById('filter-container');
+    const prevBtn = document.getElementById('prev-page');
+    const nextBtn = document.getElementById('next-page');
+
+    const pageSize = 5;
+    let currentPage = 1;
+    let ordering = '-data';  // default ordering
 
     toggler.onclick = () => {
       filtBox.style.display = filtBox.style.display === 'none' ? 'block' : 'none';
     };
 
+    const checkTags = () => [...document.querySelectorAll('.filter-tag')]
+      .filter(i => i.checked)
+      .map(i => i.value);
+
+    function updatePaginationButtons(totalCount) {
+      const maxPage = Math.ceil(totalCount / pageSize);
+      prevBtn.disabled = currentPage <= 1;
+      nextBtn.disabled = currentPage >= maxPage;
+    }
+
     function loadBadania() {
       const params = new URLSearchParams();
       checkTags().forEach(id => params.append('tagi', id));
+      params.append('ordering', ordering);
+      params.append('limit', pageSize);
+      params.append('offset', (currentPage - 1) * pageSize);
+
       fetch(`/api/badania/?${params.toString()}`, {
         headers: { 'Accept': 'application/json' }
       })
       .then(r => r.json())
       .then(data => {
         listEl.innerHTML = '';
-        if (data.length === 0) {
+        if (!data.results || data.results.length === 0) {
           listEl.innerHTML = '<tr><td colspan="3">Brak badań.</td></tr>';
+          updatePaginationButtons(0);
           return;
         }
-        data.forEach(b => {
+
+        data.results.forEach(b => {
           const tr = document.createElement('tr');
           tr.className = 'clickable-row';
           tr.onclick = () => window.location.href = `/badania/${b.id}/`;
 
           tr.innerHTML = `
             <td class="mini">
-              ${b.zdjecie ? `<img src="${b.zdjecie}" alt="miniatura" width="100" height="100" style="object-fit:cover;">` : ''}
+              ${b.zdjecie ? `<img src="${b.zdjecie}" alt="miniatura" class="miniature">` : ''}
             </td>
             <td>${b.nazwa}</td>
             <td class="date">${b.data}</td>
           `;
           listEl.appendChild(tr);
         });
+
+        updatePaginationButtons(data.count);
       });
     }
 
+    // Sorting buttons
+    document.getElementById('sort-name').onclick = () => {
+      ordering = 'nazwa';
+      currentPage = 1;
+      loadBadania();
+    };
+
+    document.getElementById('sort-date').onclick = () => {
+      ordering = '-data';
+      currentPage = 1;
+      loadBadania();
+    };
+
+    // Filter change
     document.querySelectorAll('.filter-tag').forEach(cb => {
-      cb.onchange = loadBadania;
+      cb.onchange = () => {
+        currentPage = 1;
+        loadBadania();
+      };
     });
+
+    // Pagination
+    prevBtn.onclick = () => {
+      if (currentPage > 1) {
+        currentPage--;
+        loadBadania();
+      }
+    };
+
+    nextBtn.onclick = () => {
+      currentPage++;
+      loadBadania();
+    };
 
     window.addEventListener('DOMContentLoaded', loadBadania);
   </script>
