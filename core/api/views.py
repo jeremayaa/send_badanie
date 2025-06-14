@@ -39,15 +39,33 @@ class BadanieViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        qs = Badanie.objects.all()
+        lekarz = getattr(self.request.user, 'lekarz', None)
+        if not lekarz:
+            return Badanie.objects.none()
+
+        qs = Badanie.objects.filter(pacjent__lekarz=lekarz)
+
+        # Optional filtering by tags (e.g., ?tagi=1&tagi=2)
         tagi = self.request.query_params.getlist('tagi')
         if tagi:
             qs = qs.filter(tagi__id__in=tagi).distinct()
+
+        ordering = self.request.query_params.get('ordering')
+        if ordering:
+            qs = qs.order_by(ordering)
+
         return qs
 
 
 
+
 class AnalizaViewSet(viewsets.ModelViewSet):
-    queryset = Analiza.objects.all()
     serializer_class = AnalizaSerializer
     permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        lekarz = getattr(self.request.user, 'lekarz', None)
+        if not lekarz:
+            return Analiza.objects.none()
+
+        return Analiza.objects.filter(badanie__pacjent__lekarz=lekarz)

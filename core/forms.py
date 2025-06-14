@@ -6,11 +6,7 @@ class PacjentForm(forms.ModelForm):
         model = Pacjent
         fields = ['pesel', 'imie', 'nazwisko', 'data_urodzenia', 'opis']
 
-# class BadanieForm(forms.ModelForm):
-#     class Meta:
-#         model = Badanie
-#         # na razie bez tagów – tylko pacjent, obraz i opis
-#         fields = ['pacjent', 'nazwa', 'zdjecie', 'opis']
+
 from django.utils import timezone
 class BadanieForm(forms.ModelForm):
     data = forms.DateField(
@@ -21,7 +17,18 @@ class BadanieForm(forms.ModelForm):
     class Meta:
         model = Badanie
         fields = ['pacjent', 'nazwa', 'data', 'zdjecie', 'opis', 'tagi']
-        
+
+    def __init__(self, *args, **kwargs):
+        lekarz = kwargs.pop('lekarz', None)
+        super().__init__(*args, **kwargs)
+
+        if lekarz:
+            self.fields['pacjent'].queryset = lekarz.pacjenci.all()
+
+        self.fields['opis'].required = False
+        self.fields['tagi'].required = False
+
+
 class AnalizaStandardForm(forms.ModelForm):
     class Meta:
         model = Analiza

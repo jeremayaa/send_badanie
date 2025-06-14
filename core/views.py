@@ -8,6 +8,28 @@ from .forms import PacjentForm, BadanieForm, AnalizaStandardForm, AnalizaProgram
 from django.shortcuts import get_object_or_404
 
 
+from django.contrib.auth.forms import UserCreationForm
+from django.contrib.auth import login, authenticate
+from django.shortcuts import render, redirect
+from django.views import View
+
+class RegisterView(View):
+    def get(self, request):
+        form = UserCreationForm()
+        return render(request, 'core/register.html', {'form': form})
+
+    def post(self, request):
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            # Automatically log in the new user
+            raw_password = form.cleaned_data.get('password1')
+            user = authenticate(username=user.username, password=raw_password)
+            if user is not None:
+                login(request, user)
+                return redirect('core:pacjent-list')  # or wherever you want
+        return render(request, 'core/register.html', {'form': form})
+
 class PacjentListView(LoginRequiredMixin, ListView):
     model = Pacjent
     template_name = 'core/pacjent_list.html'
@@ -76,16 +98,30 @@ class PacjentDeleteView(LoginRequiredMixin, View):
           </script>
         """)
 
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import ListView
+from .models import Badanie, Tag
+
 class BadanieListView(LoginRequiredMixin, ListView):
     model = Badanie
     template_name = 'core/badanie_list.html'
     context_object_name = 'badania'
 
     def get_queryset(self):
-        qs = super().get_queryset()
-        tags = self.request.GET.getlist('tags')
-        if tags:
-            qs = qs.filter(tagi__in=tags).distinct()
+        user = self.request.user
+        lekarz = getattr(user, 'lekarz', None)
+        if not lekarz:
+            return Badanie.objects.none()  # Only lekarze can see badania
+
+        # Base queryset: only badania linked to user's own patients
+        qs = Badanie.objects.filter(pacjent__lekarz=lekarz)
+
+        # Filter by tags if provided
+        tag_ids = self.request.GET.getlist('tags')  # ex: ?tags=1&tags=2
+        if tag_ids:
+            qs = qs.filter(tagi__in=tag_ids).distinct()
+
         return qs
 
     def get_context_data(self, **kwargs):
@@ -95,22 +131,27 @@ class BadanieListView(LoginRequiredMixin, ListView):
         return ctx
 
 
+
 class BadanieCreateView(LoginRequiredMixin, CreateView):
     model = Badanie
     form_class = BadanieForm
     template_name = 'core/badanie_form.html'
-    success_url = reverse_lazy('core:badanie-list')
 
-    # po utworzeniu idziemy na detail
-    def get_success_url(self):
-        return reverse('core:badanie-detail', kwargs={'pk': self.object.pk})
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs['lekarz'] = self.request.user.lekarz  # pass to form
+        return kwargs
 
     def get_initial(self):
         initial = super().get_initial()
         pacjent_id = self.request.GET.get('pacjent')
-        if pacjent_id and Pacjent.objects.filter(pk=pacjent_id).exists():
+        if pacjent_id and Pacjent.objects.filter(pk=pacjent_id, lekarz=self.request.user.lekarz).exists():
             initial['pacjent'] = pacjent_id
         return initial
+
+    def get_success_url(self):
+        return reverse('core:badanie-detail', kwargs={'pk': self.object.pk})
+
 
 class BadanieDetailView(LoginRequiredMixin, DetailView):
     model = Badanie
@@ -207,22 +248,7 @@ class AnalizaDeleteView(LoginRequiredMixin, View):
           </script>
         """)
 
-# class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
-#     template_name = 'core/program_analyze.html'
 
-#     def get_context_data(self, **kwargs):
-#         ctx = super().get_context_data(**kwargs)
-#         if 'analiza_pk' in self.kwargs:
-#             analiza = get_object_or_404(Analiza, pk=self.kwargs['analiza_pk'])
-#             ctx['title']        = analiza.nazwa
-#             ctx['image_url']    = analiza.zdjecie.url
-#             ctx['redirect_url'] = reverse('core:analiza-edit-program', kwargs={'pk': analiza.pk})
-#         else:
-#             badanie = get_object_or_404(Badanie, pk=self.kwargs['badanie_pk'])
-#             ctx['title']        = badanie.nazwa
-#             ctx['image_url']    = badanie.zdjecie.url
-#             ctx['redirect_url'] = reverse('core:analiza-add-program', kwargs={'badanie_pk': badanie.pk})
-#         return ctx
 
 class ProgramAnalyzeView(LoginRequiredMixin, TemplateView):
     template_name = 'core/program_analyze.html'

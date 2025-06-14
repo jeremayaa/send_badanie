@@ -1,0 +1,11 @@
+{% extends 'core/base.html' %}
+{% block title %}Strona główna{% endblock %}
+{% block content %}
+  <div class="homepage-buttons" style="text-align:center; margin-top: 4em;">
+    <h2>Witamy!</h2>
+    <p>
+      <a href="{% url 'login' %}" class="add-button">Zaloguj się</a>
+      <a href="{% url 'core:register' %}" class="add-button">Zarejestruj się</a>
+    </p>
+  </div>
+{% endblock %}
