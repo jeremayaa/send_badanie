@@ -6,7 +6,6 @@ class PacjentForm(forms.ModelForm):
         model = Pacjent
         fields = ['pesel', 'imie', 'nazwisko', 'data_urodzenia', 'opis']
 
-
 from django.utils import timezone
 class BadanieForm(forms.ModelForm):
     data = forms.DateField(

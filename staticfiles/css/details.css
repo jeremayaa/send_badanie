@@ -1,0 +1,112 @@
+/* Layout container */
+.detail-container {
+  max-width: 1200px;
+  margin: 40px auto;
+  padding: 0 20px;
+  font-size: 16px;
+}
+
+/* Section headers */
+.detail-container h2 {
+  margin-bottom: 0.75em;
+}
+
+.detail-container h3 {
+  margin-top: 2em;
+  margin-bottom: 0.5em;
+  font-size: 1.1em;
+  border-bottom: 1px solid #ccc;
+  padding-bottom: 0.25em;
+}
+
+/* Two-column layout */
+.flex-columns {
+  display: flex;
+  align-items: flex-start;
+  gap: 2em;
+  flex-wrap: nowrap;
+}
+
+/* Left panel (metadata) */
+.detail-meta p {
+  margin: 0.4em 0;
+}
+
+/* Right panel: reusable item list */
+.item-list {
+  width: 100%;
+}
+
+/* Shared item entry style (badania & analizy) */
+.item-entry {
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+  text-decoration: none;
+  color: inherit;
+  margin-bottom: 0.5em;
+}
+
+.item-entry:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.item-entry img {
+  width: 80px;
+  height: auto;
+  margin-right: 12px;
+  border-radius: 4px;
+}
+
+/* Action buttons */
+.detail-actions {
+  margin-top: 1em;
+}
+
+.detail-actions a,
+.detail-actions form button {
+  display: inline-block;
+  margin-right: 10px;
+  padding: 8px 14px;
+  background-color: #2d7e7e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  text-decoration: none;
+  transition: background-color 0.3s;
+  cursor: pointer;
+}
+
+.detail-actions a:hover,
+.detail-actions form button:hover {
+  background-color: #256b6b;
+}
+
+.inline-delete-form {
+  display: inline;
+}
+
+/* Main image */
+.detail-image {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+/* Thumbnail inside links */
+.thumbnail {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin-right: 10px;
+}
+
+/* Empty state */
+.empty {
+  font-style: italic;
+  color: #666;
+}

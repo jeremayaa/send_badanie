@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg
+*.egg-info/
+dist/
+build/
+*.log
+
+# Environments
+.env
+.venv/
+env/
+venv/
+
+# Django static/media
+/staticfiles/       # Collected static files
+/media/             # User-uploaded media files (if applicable)
+
+# VS Code
+.vscode/
+
+# macOS
+.DS_Store
