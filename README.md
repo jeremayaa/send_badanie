@@ -4,6 +4,8 @@
 
 It includes a custom-built web-based program to create **binary masks for semantic segmentation** based on histopathological or other medical images.
 
+It was developed as university project
+
 ---
 
 ## ✅ Features
