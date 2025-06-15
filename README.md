@@ -24,7 +24,7 @@ It includes a custom-built web-based program to create **binary masks for semant
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/send_badanie.git
+git clone https://github.com/jeremayaa/send_badanie.git
 cd send_badanie
 
 # Create and activate a virtual environment
